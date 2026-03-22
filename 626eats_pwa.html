@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="626 Eats">
+<meta name="application-name" content="626 Eats">
+<meta name="theme-color" content="#2C1810">
+<meta name="description" content="San Gabriel Valley Chinese Regional Restaurant Guide — 60+ restaurants, 22 regional styles">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAABmJLR0QA/wD/AP+gvaeTAAAgAElEQVR4nO2deZxcZZnvv+9Zaut973SW7s4OJMEkBAKiARUBFRiZAQXuAAIK6ozildF71XEQdWY+M/NxnHGZkesojKK4gKKA6L0IiAZIIAlZyNZZutPpfa+uqq7lnPf+UV3dtZxTVd1k6a46z+dTSZ3nPOf3PvWeb586dd5NcJbs/hY8flfNDVKIt4KyVgi5BCGqQLgEqAghAAEgU46UFu+mN1JjrY5KbMj8Yicd9rEy3TFLXbtPOVPd6YqwirfUsIy1qR+Z2ClNEFEgosBJgXwdzBeEV3/iwf0D3TapnnYTZ7KwTy2vuU4R6h0obBaqUifEdPlWJzDT78CcXff0w5xTV4Iq5LAw+INiyH978OTIc1ZSp8tOO9D3nVO1xjT0LysqVyqK4s2roh2YZ6E7B2BOiY3vUSCoSPmoIfj0Q8dHRqzCT6WdNqA/tbzmOkVTv66qSkvC58CcHlvYMCebkJiK4BWN2B0PHvcfsDr0VNgpB/qTK+s+oCvia4qmNAFZoXNgnm0OFltzGOZkjwCpmPxOMUtu/q/OziErmTdjpwzoT5+zoFlK89eaqqxFpNLmwJweW5wwp5hJTEN+83sdI5+yC5mNnRKg711V+21d1e4WilDSaXNgTo91YJZJOzQhT8iY+c6HOscO24TPyN4U0J9rrW+IuMVLiqa0xj0OzA7MWWJJhTlhAmlqcP/32ke+bHNY3jZroO9bXnuN0LWfClV44h4HZgfmLLFYw5xcPzq88P32kXcApo1ETpsV0P9zdf19mqr+E1PPkR2YHZizxJIb5oRpghOuiG/Dg11dAzZSWW3GQN+7qvbbbl3/aEYyDsw2sQ7M+cKciFUk4+Uaa751bKTdRtLWZgT0p1fV/kTT9RsdmPPVdWCeKcwJUyEopFz38InRIzbSlqbkG/jp1XXfdGCeia4D82xhBjDAZwqx59aFZStt5C0tL6A/vaLuC5qmfdyBOV9dB+Y3A3PCDPBKVd3xkaamWptiMiwn0Pcur/sL1aV92YE5X10H5lMBc8JtQMmEGnz9ftBsikuxrEDft6yhXnepP8zoE+fAbBPrwHwqYU5YTNB0bHHlVpsiUywr0ELnJaEId0oxDsw2sQ7MpwPmRGwENt2+uPKbNkVPmS3Q966q/bbQlKUpxTgw28Q6MJ9OmBMWgY/duqTqUpsUAJvHdp9fWbMwousdQjh9M3LrOjCfCZgTUSoi4KsfqX/wNYJWOpZX6JCi/caBOR9dB+YzCTNADFkS6qt43CadTKA/ubLuA5qqrHVgdmDOGsuZhznhjsKVt7dUb7bSywBaU8W/Ov2ZHZizxnL2YE5YzIg9ZqWZAvSnltdcp6rKgmQFB+b0WAfmsw0zQFSKptuXVHw23Z8CtNC0rycrODCnxzowzwWYE7ExU3w+fd8U0PedU7VGU0WLA7NdrAPzXIIZIIosu21RxWeS908BbRr61GgBB+b0WAfmuQZzwqKCzyVvTwGtqFxpK2TjcGCeia4Dc27dmcEMEJNU3L6k4obEtgKTc2g4k8BYxDowz2WYE+7ke+n4FVpV7nRgTo91YJ4PMANEketub6ESJoFWEBflTMSBeRa6Dsy5dd8czJPbwjDKPgOg3N+CR9GUuqyJODDPQteBObfum4c57pOYUlwHoPhdNTeAMwuo1V4H5vTYuQkzEmKSlQBKfH5mmwMcmGehmx3msro6Lr/5NiobGnNoOzDn1E2qDBO02xeVX6WAstbyAAfmWejmvjKv2HgR57717bz1/TdmiXVgzqlrURkmvFdByGYH5vxzOOeSt3Hj579EZeOCGcMMcOz1HUgkzWvXUVZdM2OYy+vquOkLX2LtlndY5zsVW1wwAxiwUUERVVYKDszWuo2ty6hpWsj6K67OPDKPK+hQdxfdR9oQCFrPX58RmevKXFlbT+3CRWy+5v2oLrdNbPHBLAFTslQRCD1dwYHZXvfAy39CAssv2ITb5yO5InLBnLCOfXsAWLTynJTIXDADnDi4n7GhQTwlPlZs3GQRW5wwT/5foQiJmux1YM6u23XkMKN9vaiazqJVq7PG2wHa234MgIqGhilnPjADSNPkwMsvAdC6Zl1abPHCDPEfhooUQnFgnpnuiQNvALBg+coZwyyB4OgoAKUVFcwE5oRux/59ADStWJEUW9wwA0iBqgjLnQ7M2XSHu08CUFZdO2OYAYSI9zgwDWPGMAMMdsXL95WVo7tcDsyTZkriNevAPBNdSWh8HCR4Ssty52Ch7S0rBSQToVDOWCvdSCiIacY9npI8c6CwYZ5EDsWBeSa68S1Njc9KFYtGsuvaaNcuXoIEBk925pVHhk8oKIpAAtF8cqA4YIaUIVgOzNl1pyuipKoagInxcXtdW21Jy9rzAeg5diRHrLWvvKoaCUjDIBIMZo2F4oEZpoB2YM6uO10REqhviS8pM9DRbq1rqy0pq6ujadkKkJK217ZlzcNOt6F1svyuTgwjZh9LccEMoNh+PAfm1K3JeN3jYfE55wFwsu3gjGCWwIVXXwtC0HnoAGODgzOGWSJZtn5jvPxDB+1jKT6YIemWw4E5y5FJ8asvvBhNdzHa30fv8WOWAnYwNzS3sOrCiwF4+clfzgrmkspKWidvWQ5ue8WBOc2f+ZTDgTl1Kyle03Q2XPkeAPb84ffI9DOWBWZN03nnrXciFEHbjlfpaWubMcwAm656H6qu03vsGD3tFn9QFC/MINOecjgwp26lxV/w3mspqawmODbCvhdfyEN7+pNtes81VC9oIjTu54Uf/3BWMNctbmbt27YAsPVX1tO7FTPMkPyUw4E5dSstvr6llbe860oAXvz5o6mP7HLAXLeomfXvjndmeuHHjxAc9+fIIVk3vkfVdN59+10IVaVt52tTrYUp4UUOMySAdmBO3UqLVzWdd/zlh1AUlbad22l7bXsO7dRPdtE116EoCkd37eDwju0W0daJJatcePX7qFm4kJB/nOd+/IPMcAdmAGz6cdgUUIQwA6y/4kqqGxcSGh/nD48+kkM79ZPVLFxEy5p1ICVbn8i8TcgH5poFC7ngqvi9+ws/fYTg2FhquAPz1JZF07dNAUUKs+7xcP473w3A1sceJZS4XcgDZoBVmzaDEBzbs5vhnu7s+U7ppu654Or3IFSV43v3cHD7K6nhDswpsUpeJ7xIYQY4961vx+0tYaS/l4OvvpIl1rp+lq6Ld+I/nGhEsct3Sjd1T1lVDSs2XghMPupLDndgzoi1nMHfgXl67/IN8U70e55/FmmaM4LZW1JGZWMjUkqO791jn+9UDpl7lq3fiKKqdB89kvLc24HZOjZj7bfigFmgukEVIivMvrIKGpe2ApLOg7twuRWLWIm0WqpGQkPLIhRFMD48AmYIt8fq+ETOkvQlbySwYuN6FEXQsXcHbs/kb/icMAtk1CRiFBfMkAZ0ccAc31KEggJIkblyUgKt+iXNCKEw0tdNcHgEIUQGcpJ032QeAspra0HA2GAfQggLZBOFZapIQBGC+sUtCKDz8H6UhIawkEh7Z4rigxmyNn0XLszZ4pN9lY1NAAx3d9tcma0FEn7d5QEgHArZxlplkfCUVFbi8niQ0mS0tzdHvmmfsghhltg2fTswA5RUVADgHxrIiMwFM4Cqxb8ATSNqU5g9zPHy4wPyA2OjGf2eU2MdmBMui6ZvB+aEaVp8moBYJJwSmQ/MAJGJ+IgUl9dnUVh2mAE0l2uyfAfm3LFxS2v6dmBOdgp1cuyfaU4584UZIBSIP7NOGSaVJ8wAiqIiiY89tI51YM64CCRHOzCDNE0MI+4P+MeRUuLylBCLzXxA63BfP9KE8to6DEMiTWlZy3afY2x0DCklbl8J0aiZFht/p2oKSpH+ALT8VnVgTvPFJNH4IBCCo36kCe6SMqJR6xrNptvX0UUsGkN3eSipqGO4ryevHCAOUmB4HGmCy1uKaSoYU1fqxFECVJv1re0+XwHDLJkcseLAbK090tsLSKqbmnLGWumaRozBySkPGpYuyy8HpkHyjwwRjURQFIXKxgWWRzlX5tTY/Jq+Jx3FBDNAf+dxJFDZsABNd+XMw8p3Yv8bSKD53DW5cyAVJGmaDJ7sRAINi5ZkHOXAnBmbu+l70lFsMIPEPzTExPg4iqKwYNnyWeke27sbgOZzz0MIYR+LNUg97ccBWLhyRc5YO+1igRlkJtAOzHGnBKSUdOzfC8CS89bMQlfS3XaYsf5+wpPTDcwEZgm0vxHvA9Jy3trpPwgHZovY+Bv7pu9JR7HCnLDje/ewctNmFq88d8YwA5imwX//XXxtSNOGmGx9MzoO7MeIRSmprKayoYGh7swflnZ5FBvMkAR0UcJs0bEiPfb4nl2cOLCfrrbD+eum7TFNm0d+ZIcZJLFImFefeYoFy1fiHxq21shLt/BhloD45Op6y89e2DALNI+CKlIjJWBGDSKx3HnkC7NtLLlhzhULAtWjoKfdOEoJZsQgPPU5igNmsHrKUfAwW/lnPqWtdeyZhNm5MlvFpv5tOzDnzMOBOVes9Y4zATOk9eVwYM6ehwNzrljrHWcKZkiaxsCBOXseDsy5Yq13nEmYYXIaAwfm7HnMZZgtK9MmttBhlmRt+nZgzq579mF2rsyZ8TZN3w7M2XUdmKd8cwhmsADagTmXrgPzlG+OwQwZTd/zE+b33bSUmgaPjaJ1Dukjp1Nys0vuNNmbKS7r55iBTl9PkJ8+nF9r6FyFGVKavucnzADeEo2qOp9FlGP52rg/27jFNN8chVkyCfR8hhmg72SAppbM5c0cy99OdoynbM9HmAGU+Q4zQMeRzPmWHZuZHT88PaPpfIUZ0qcCm4cwI+F4W3zsne39pGPZTcKxo/7EW6vd8wJmSAZ6nsIsAWmYTAQjeEt0m5Icy2bBQJRY1Jz3MIOcnsZgvsKcsIHuIIuWVdiU5lg26zkZKAiYIWfTd6ZjLsIM0H5kzCrSsTys7dBIhm8+wiyZ9ajvuQUzSPbtGCL+ANl5zeglJbt3DGbW+zyEGWkxP7TlQXMcZgkEAzEmgjE8PsuP5JiNBQNRAuPTQ3TmM8xg2fSd6ZjrMCestytwtq938+7V1RlIrfd5DDOkAT2fYQbYt3Pw7BMyz147t/VP1/s8hxnsJjyfdMwnmAHa9o4QixqcdUrmySsWNTj4xnDBwCyZavrOPGa+wYwEQ0J/d5AFi0ttMnIs2bo7AxgmBQMzgFYoMCf8B/aM0PgmgXb5anGXL0YvqUPVfSiaDykNzGgQIxIg7O8iPNaBEQ2+qXLOtu3eNVhQMEPWpu/5BzPA7u0DvO2KBajpk1VkMUX1UNKwjrIF6ympW4vqyq/nXmS8h/GeXYz37CA4fITT3u9UCHzVy/HVnou3shXdV4ui6kgJsYkhJkZPEOjdzfjAvpy5xGImO7alL7Uxv2EG26bv+QkzgDQlJ475aVmRu9XQVdpAVeu7qFhyKcrk8hPR4CCB/n2ERzuIjHdhRIKYxgQgUHUfqqcST2kTnsoleKpXUL38KqqXX0VkvJfho/+X0RN/woyFsxc8Q9PcFVS1voOKJZeieaumP2sshBEeRygq3uoVeGtWUbX0XUTG++jd/TCB/v22mscOjSJNq7M1f2EGrJq+5y/MCd2tv+/JCXRlyxYa190KQhALDTHU9gzjPTuZGO3IehxAok1SqDoltedQvvBCypo20bDuf1B3zvWMtL/I8NFniYYyr4AzMU/5IiqXXkHFos0IVceMBhlpf5FA7y6CQ4cxwtNdPoWi4a1eQcWizZQv2oyv7jxboCWSF57tSfNN/5vim0cwA4iPraiThQRzwu68dzWlFW7LXAHKFryFytZ3Mtb+R0a7XgVp2MbmY5qrnMrWy6luvRzVUwHSZLx3D+PdO/B37yQWya+Lq+6tpaxpPWULLsBXuxKAyHgfQ0d+x2jHHzGN3Fd/RXVNrrxlfbbGRsL8+z/tndouFJglID66ok5ahc1nmAHO31TLZe9ZaKVwWk0oGuWLLqR66RV4KlviTmkSHu9lYrSDiP8kRjiAGQsihUDTfaiuMtzli/BULEEvqZs8RhLoP8Dwsd/h73mdU3l//swTHbz6StLz5wKBGTl1D11YMAO8vm2Ai7bU4/Wd2S6l0ogx2r6V0fatuEobKFuwntKGdXgrW3CXLch6rBH2M96zm/HunYz17MSYGD3l+YVCsYKFGUArRJjjsZKdL/dz8TuyQ3Q6LTzeQ/jwbxg4/BsA9JI63CUNqK4SFM0HQmJEgsTCfiKBbmKhzF5vp9peejF+71yIMMObmvDcYmsOwQzw6p/62HBJPW6PahU5ZYrqmnru7PJWo3mrUFQPQtURCEwzghGdwAiPEQ0NEg0OEBo9gYyFsuqmWzTQTzTQP6NjMnLVPWjeGjRXeXz9cCNCdGKEaHAQ+7MVt/BEjJdf7E3GZsoKAWaY9YTnFltzDGYA04QXf3eSd12zJCNU81ZRWr8Gb/WK+K2AUJBmjFhoiGhomNjEGDLxw0rRUXUvrtJGSurORaguQBIJ9BEaOkKgdy+RQK9VRm/aFM2Dr2YlvtrVeCoWo+jWz8ilESY4eISxky8THjtpGfP7Z7riLYMFCrNE5tP0na2AuQtzwvbuHOaCS+qprInP2yFUN41rb8JdsRhpRAkOHWG8bzfh4XYiwQE79RTTfdW4y5fgrWymfMF6KhZfQjTYT6BvL+N9+4iFrGfaz9cUzYWvZjUl9efhrWoFoRDxdzPW/RqxYD+R4BDGxAgSiaJ50D3VuCsW46tZSUnduZZAD/aHeG175ucrJJgBxD0rajM+YaHAnPDUN3r54F3LEUKgqDpVS99FeKyT4MBBTCNzPoqZmFBUvFXLKG1Yg69mFULVifi7CQ0fIzRynIi/K2cTuVB19JJ6vJXNeCtb8FS2IITKxFgngf43CA7sJzYx+xE5UsL3//Mg3V2BVP/UP2T6rXxzHGZIB7pAYBaKQNMFLpeKy63gcits3tJA87JyK4VTZoqq461ZRUntSjyVLaiueJ8SMxYiNjGMGQ1jTN53C0VHVV2onio0TzwvaUSZGOskNHyEQO8bxMKn5kfi0UOj/OH5bqIRSSQSIzxhMhE2MQ37i0CGbx7ADMlAz2OYhQCXW8XjUXF5FHRdyYhXFLj6+mZ8Z3BkuO6rxV1aj+atQfdWIVQ3qh6/9TGNCNKIEAv7iYUGCQcGiPi7kWYsh+rMLBiI8vhPjmKamfsiUZNwyCAUNAhHDEyLSp5PMEMC6HkKs6JBSamOt0RFVbIvaomEsnKdK/9sMUIpjgk8TFPy61+0Mzqc+7YqZkgCgRh+fwwjFqd/vsEMk4vXzzeYBYLyKjV+tRXZY5N3+Mei7No2wPkX1RX8pDRSwratfXnBLAFVFZSX65SV6QTGowyPRJFTtyTzA2aJVX9oywLmDsyKENQ2uFC1jPWOrC1tR9uBMTwlGqvXVFnHF4i1vTHMoQO5WxrT600IKCnTcbtVenonMA3TNjbFPwdgRua11vfcgRkJpeXarGFOuPa8NkRPV2Byq/Be3SfH2bEtdwOObb1L0HSFigota2xyfHbdMwMz5Bz1Pbdgnslk43YwJ+ylF3rpPjF+ttk75a/+nhB/fN56+eQc1ZMG0fTJmS8wQ9ZR33MTZv9YfB4221ibHdLi3fat/Zw47j/bDJ6y14mOcZ5/tsuuVrJVTwbM0YhkdDQ6r2AG26bvuQkzxH+59/eGKavQ8ZVqmT/u8oQZQErY8coAkYjJ0hWn9xn16TQpoe3QKK8nzYCUFRgrX+KUS4nfH2V0JIpp02V1rsIssRz1PXdhTpgpJaMjEfz+KCWlGr4SFVVVZgxz4gnJ3p1D9HWHuOCSejRtfj3+MAzJtq29nOycbo2cDcxGzGR8PMr4eAzDsMNobsMMID6yPLnpe+7DbFchuq7g8aq4PSq6riBENpgFmkugpv2CcLtVNm9poKLSZVPK3LLhoTDPP9eDEZkebZM42WbMJJo0CCej3iSEIwahUPwVCRv2sWnaGT4Lz9mAGVKAnr8wp38zCgG6S8HlUtAnm76nGl4kQCbQCQkZNWlYUsLGC+vQXfmPHD+TFo2YvPbqAEcOjaG5FBIPfZJPdjLQkviVPBw2iYTjrYLhsImceiJn96dPqn+OwwzpI1YKAGYAU0I4bBIOGzA5lE9RBIoi0HUFTVfwlKq4dYGmCkhrOTxxLEBne4CNm2pZsqwUVZ0btyGxmOT4kTG2vTKQBGPcJIAZb/EzDJNwMEYgJInGTKJRE8NIg1ambKW9s9CeBzADiI8sr5nKpBBgtr/NSN4S6J74lU0Sh11VQVEVhGEQNRVUVaCq8U5O69ZXsWJ1Rc6BAqfLwhMG+98Y5fWdg0SjYMQMDFNiGKBoAiFNjFj8B3PCjIjBhEW3kEKGGRJAFxXMkAA6/R4awAgbhFNAmD5ZjU1eNl5YS3NrCR7v6Z22Nxo16TwR5OWt/XQcG0/LJGECzaOgW3yBxCLpn6PwYZaA+MiyGsuHM4ULMyRASGtwREowU0DIRChh1bVuVp1TwZLmEqpq3Xg8CmKWHUSklExMmAwOTNB+LMCB/aMM9qdOV2CViUSguxXSJ4mSxK/QyUAXA8wgrftyFDbMNrllOO1hlhIG+8Ns7e9ja5K/tEyjsamEmjo3FeU6qi7QdYHLHScuEjaJRiVGxGTUH6W/P0xPVwD/WGy6LNvPlw5ztlgLXxHAjLSYwd+BeToqv9jpI/z+GP6Doxw+mPBZV0Zu6LJn4sBskclkQPYJz1Njc6dSxDBn+hyYs+ueepgh24TnmbHZU3FgTvI5MGfXPT0wSyaBdmCejnJgtoud+zCD3bJuDsyz03VgzqF7emEGqw7+Dsyz03VgzqF7+mGGdKAdmGen68CcQ/fMwAzJQDswz07XgTmH7pmDGRJAOzDPTteBOYfumYVZYrt4vQNzTl0H5hy6Zx5msHzK4cCcU9eBOYfu2YEZmfGUw4E5p64Dcw7dswczpADtwJxT14E5h+7ZhRmSRqw4ME+aWkHT5nez4ZKNNLc2UV6iIcPjjPWeoOfIIdr37uTw7kOMTFjoCg8Vy9/Cyg0bWLZ8EZXV1ZRVVeBRogQHu+k5vIu9z/2W3QcGSYzgywtmtYJFl1zJxrdupLV1IeUl6mROnfS1H+LE/p207Tk8lVOKRhHBLAFx59Jqa14KGmaB5k7vD61SvvEubv7CX3PB0lIEEfxHX6ftcA8RdyPNG9fTUK4hiLD/y2/ngYc6SRkFJeq5/Lt/5O4tPoSQRAcPcPC1IwRcTbRufAt1ZUp8kLmcoO+Fb/N/Pvdv7OyJ5YBZpeLCj/Dhr97L5mWJnHZx6FAPEfcCWi5YT+NkTgf+YQtf+UHn1LGxiEE4mqvOCgtmsJvbrqBhtopVqLjsy/zNP9/EArdARo7wwv+6g+//6igTk5UhKt7CNf/+MDddWmatK1Q0t4YQBsPPfpGv3vswHZPziyv1l3Pr9x/k6nO8COGh/rJP8dkfNfAvf/FZXh20uKpO5lT5zr/ngW/dwsLJnJ77zO08+MsjTHX9r1jPn//Hf3PzJWWZGkV2ZU5Ynk3fhQwziIb3c+sDH2SBWwAxen74N3wvCWYAObqLJ//2X9nV2Yc/mLlIZ0JWBl7kp1/4wRTMEjD6fs+PHniU/qnDBFrLB7nt7o0pHdKTUxONf849/3wzCydz6v7BfXwnCWY5mdOv7/86r5+czqmYYQaZbfH6HAUUCMzgZvltn2Bd5eTfttHBq0/tJGxRGWbHQ/zjloes8zJNjHCI4Pan2dmXPFVZ/N/wzmfZN3ob9dWJa4hK/dsuY7H2Kscy7jw8rP7wp9hYNRkb62Dbr18jMTFucqzZ8RD/fMVD0/4ihhlsF6/PUUDBwAzSvYnN71489VUlIwc5diRqKWJbPxKgl2fvOI9n7TIxBxgcMKF6+ktRqaqmRFjoujfx9vcm5RQ9wNG2pGFaWfPIlm9hwwyWi9fnKKCQYAbUZZtZWZN05+UfIFi2gbd96EYu3LyOhmo3ZrCf3n0vs/3nP2Tr6wN5PqHI/DLUXamDaM2BPkYtlopQVlzMOck5jQ0QKN/Aljs/wOaL19FY48EM9NGz7xVefeIRtu0dwGK5FPusChRmiW3Td3HADOBqXUFt8i+Jsqu4+8nHuPWKGvyH9tJvNtK87lIuuvk+Pv7z5/jipy+lQlifQLtMJCB8rTQ1JBcUo+v5ZzmZdjsuAfeyldQnTwFSfjV/9Ztf8KEraxk7tI8+o5GW89/Gxbfcx189+nu+8MlLKc+6kkFxwAygSIssiwVmUCirqU2ZOEl4aynv+Q7/eMOHefD+z/BPf3E7Tx2Jf90LpYrV9/wnH/vAYsQMYEYKyi67mnM9Ysprdv2CR763FyMjVqG8tg41Pafu/+Qr19/Jt794H39//a38KimnVR/+Dz52w2KEZT0UE8xCKqRNKlU8MAMIXF43qTcCMU488wTHJiZjgzv502+PToOnVLLunrs4J20+R3uYAe8Grv3ou/DFH0Rj9v+Bhz/yv9k+JDNjEbh8mTl1/OaXHJmY3Azu5A/PpOa05sN3sSpjjsnigRkJqpBSUSBmfdC0szBhjpuRvpaZjNF3rD3pyhmj58jxlCXPlAVvY93K9OUabGDWmrj4q9/gmpUuBCbBvQ/ztRs+xJP7Qpmxk1umRU69x9qnGnIkMbrbjqfcNysLLmXtisyHgMUCM4BAxBSJGLUtoMBhlhgEhkdT98kQgbHUObSi435S1pJSF1LfpNpmMnWyPcu57F9+xif+rBkl1se+B+/mMzd8npfaw5mxU1smgaGR1FbIpJwS8VH/GCkNgcpC6heoSTrFBTOAEDKqqHC0OGGWICWBjuOMp9BjZszsaZpGmoaKooqsMGuL3s1tP/olH7+2GePIEzx00xXc/w9P0z2RGZuapWSs/Th+i5yS46VppkKPiqJM30UXG8wAqhCDiomx00q98GGOvzcOvMKRYGBxIiQAAAi/SURBVPKfuQeXRyTFguL2kLL+rNnHUJ+RoR4/2R6a3vcAX/rVd3nf2ij7v3sPf3Ptx3jytYEkAF2s/dIrPLL9a1zgSs1SAsbelzkUSM1J96Q+sFY87oychvvtpxQrdJgloArluIZUnkLw0eQ9hQ9zErBjL/DS84NseF9t/IeYcFGzsAavpycOoFSoW9SY8tRB+l+j7XgMjydlSCaibA2Xf+7r3HzNSjj+JD/6+Bd5ZucAJgoeT3IOCh6fF4/Pg8cj8KSvght5ga3PDXLRtdM51S6qxevtnoxRqF3ciJaS06vsPxQtWpgBFCH3af/VPvzUHa3VMXNqVdlChzndOcrO73yTg1u+yOoyBdBYfMFGvD97mqAJKJWs2LSaqcfCMsLJnz3E3pBASZo5Xyjncd33f8H153oQMkaofANX/suTXGmdHnplJZCYiH1SY2rvGLu+8w32X/53nDuZ05KNGyl99CkCEqSoZPWmc1Jy6vzp99mVWHoxRz1M+QsIZgBViBdVgI2V3ptNqC0emAWqJlAmv8XlyG72HanmvC3nU+FS0FvWUu9voy9UzpJrPsfNN59HiSJAxhjd+lW+8ZXfMBxLKksC6jIu/PCNLCtTQCjovnJ8ZfYvj65A9CCv/NfTGY0rAHLkdfYcqWbtZfGcXK1rqR9voydYRvO1X+Avb5nOaeRPX+FrDzzNUNKvRGlIohatkCk5p9dP3rFZdM8SzIoQsmQgeIsAuLOl6h9j8FnbQtP98xpmsJ7wXOBpvYor77mbLZefT5VXmb5iyijBjm1se/Qb/PLHWzNhBtA285fP/JgrFuQ/y78MPsHXL/krXrVYjjuuLfAsvYr3fuweLr/8LVT5UnMKdGzj5R//G489sjUFZsh3Bv+Eb37DDOBTlZ6nB4ILBMDtLZWVEjFE0rde4cIMthOeJ/7Ry6lpbqG63IOIBvH3HKOvf9yiVS9ZsoyGtedR6baZ9NzizEhzgM4dh/Fbnax0n15ObXML1RUelGiQsZ6j9PYF4o0IFsebFkAXKswAFZryiyf6g9dP1f4dzVW7DMH5WZMpCJhBJq2xknK83Qe3qvKsdWEXa1db2bUzY2XO2HSgCxlmCdS6lfc+1hN8eqppSUc+YCAeK3yY4/8asenTmR3Q+QczkPIsvdBh9igEHusJPg2kdhn4UEvViAEVGQcVFMwWvgKDObdu4cAMUKGJx3/VH/pzSBuCpcA/ZBzkwJxHbDZdB+b0gFMJswCEqv4tSdspdntz1agpKAcH5vxis+k6MKcHnEqYkVCqKUefGgguS7gyBsmqgr8HB+b8YrPpOjCnB5xqmAXg1vhE8n7LZ0y3N1d1GbAgR/HxrWKBWag0rK5kaRUEQ3GnOhFi9/4Q0bRY4fOxrtVk374QaY+HcTdVsX6xiqEouJBETDAHRnitLTrV18PbWM6qhRqYJoEuP4d7Yxn1UewwA5RoovPpgdDi5BjL1dk1XVyfo/j4VrHADCAN+rphSV2MvTuHONQfA6GiWMRWr6lmw6X1rC7NLEstg75dA+wYcLFIjrJ9m5+QZ7ofs/BUctXbdY7uHGTXvgi1K3zoDswZsQKJT+GT6XGWQH+3behlTfJbm+LjW8UEc7Lf66JpkY/W1V5GDo4zkRIrQfOxQh/myV0K55+fPvIEAgeHp0eeAJgT7N0bmu68Hw3TLcq57NJqVtRG2f7HsZS+2A7M8Telmvr6z/tCj6fHWgINIDuG/0wBv2VaxQpzko22jdFjklHbvlUVlPlNlL4gYl0NS7Q0jVwn0Ajy8k+O8/8ORPAsbeSmG2unZj5wYI6/0QRmuW5eZ5WHLdAPwYQqeY9Iw6zoYQ5F6OoMcuJ4mKpVZZSKpAjFxcq6KAf6JDLoZ0enjw2rtenBq3Y0JJfkruDyd3iJ9o6z+5VBujWdUqu5O7LkXMgwA5S6lG/9qHui3SqXrD1pdo5OdFxQ6akx4CIocpiFSmOrB4FG40IfixZ5KTcidPVFpgZlepsqaPRG6W0LMDAucXkEeolGuH+C8eR+FYqL5lYNE5XY0AT+pA4Z0ozhF16WtZawsFGha/sgx4LWFVSUMGui7df9E++xScf6KUe63bGkcnsYLrDaVxQw28ZanKw88siMlTOIzaZb2DC7FBEpK1NaHm8PdtukZH/LkWxLOkYu1iRdtgUn+xyYs2o7MGfXtoNZIGSprtyYDWbIE+j7IeY2fOerEMiajANzVm0H5uzadjAjoEpX//cveoNP2KQ0ZXndciTsruaK1ogUe2JQkpGMA3NWbQfm7Np2MEug2qU/+Mu+8bttUkqxGQENcajDUuwxkqB2YM6u7cCcXdv2ygxU6tqjT/QHbrJJKcPyuuVItu+2jx4rVzlPm3xG7cCcXduBObu2LcwCqtzKN2cC8+Rhs7NbllOuhit2RBHLpr0OzNl1HZiz6ybeCGrcyt8+3hv8ik1KtjZroBP2ocWVj0/A+x2Yc+k6MGfXjb/RhYiUa+KWx/tDP7dJKavlP0TZxnaNTfxkU4XLMGGLici4hXFgTsvKgdkW5lJNtNXr2pqf9AW326SU0970FTphty2uWGbC76OwJOFzYE7LyoHZEmZdYJa4lG890Rv6hMUhM7JTBnTCbmsu/1rUFH9tpC9INGkOzLPRLUyYBZJSTdlV6uLaR7tCJ2zSmZGdcqABbm+hUsYqfhSGq2SOuT4cmHPpFh7MAvBpotOn8EmrLqBvxk4L0Am7dWHZShT1e1EpLzYsHhE6MOfSLSyYBVCiKkfdGp94vCf4lE0ab8pOK9AJu2U55Uq48msxKT+YaJBxYM6lWzgwu1UCHiF+q5va5x8b9B+wSeGU2BkBOtluW1z5dinlvVHkZYakKrkSHJgTvvkNsyKE9CiiVxe85NLEgz/rDjxjU/QptzMOdLLdVV/fEHOFrjVRLjeQ55uIJonpMaXQpEA1JcIeUAfmswWzIoVUhJRCCEOBiCIY0oRo1wWvI8SflN7AYz8DiykoT7/9f0gvMG+XtrPiAAAAAElFTkSuQmCC">
+<link rel="icon" type="image/png" sizes="192x192" href="data:image/png;base64,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">
+<title>626 Eats — SGV Food Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<style>
+/* ── TOKENS ───────────────────────────────────────────────────────── */
+:root {
+  --bg:        #FAF6EE;
+  --bg2:       #F2EBDf;
+  --ink:       #1C0F07;
+  --ink-soft:  #4A3428;
+  --ink-muted: #8C7060;
+  --red:       #B5341C;
+  --red-dark:  #6B1E0F;
+  --gold:      #C9963A;
+  --gold-lt:   #EDD98A;
+  --cream:     #FDF8F2;
+  --border:    rgba(44,24,16,0.12);
+  --shadow:    0 4px 24px rgba(44,24,16,0.12);
+  --shadow-lg: 0 8px 48px rgba(44,24,16,0.18);
+  --radius:    16px;
+  --safe-top:  env(safe-area-inset-top, 0px);
+  --safe-bot:  env(safe-area-inset-bottom, 0px);
+
+  /* Region colors */
+  --rc-canton:   #C85450;
+  --rc-teochew:  #C47A30;
+  --rc-hk:       #B8960A;
+  --rc-sichuan:  #A0303A;
+  --rc-shanghai: #2A6A9A;
+  --rc-taiwan:   #2A8A5A;
+  --rc-beijing:  #6A3A9A;
+  --rc-north:    #7A4AAA;
+  --rc-shaanxi:  #C06020;
+  --rc-xinjiang: #4A7A8A;
+  --rc-hunan:    #3A7A3A;
+  --rc-yunnan:   #207A6A;
+  --rc-guizhou:  #3A6A9A;
+  --rc-hotpot:   #8A2020;
+  --rc-modern:   #5A5A9A;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  height: 100%; width: 100%; overflow: hidden;
+  font-family: 'DM Sans', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── SCREENS ──────────────────────────────────────────────────────── */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  transform: translateX(32px);
+  overflow: hidden;
+}
+.screen.active {
+  opacity: 1; pointer-events: all; transform: translateX(0);
+}
+.screen.slide-left { transform: translateX(-32px); }
+
+/* ── HEADER ───────────────────────────────────────────────────────── */
+.hdr {
+  background: var(--red-dark);
+  padding: calc(var(--safe-top) + 14px) 18px 14px;
+  display: flex; align-items: center; gap: 12px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+.hdr-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 700;
+  color: var(--cream);
+  flex: 1;
+}
+.hdr-title small {
+  display: block;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px; font-weight: 400;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(253,248,242,0.55);
+  margin-top: 1px;
+}
+.hdr-back {
+  background: none; border: none;
+  color: var(--gold); font-size: 22px;
+  padding: 4px 4px 4px 0;
+  cursor: pointer; display: flex; align-items: center; gap: 4px;
+  font-family: 'DM Sans', sans-serif; font-size: 15px;
+}
+.hdr-back svg { width:20px; height:20px; }
+.hdr-actions { display:flex; gap:8px; }
+.hdr-btn {
+  background: rgba(253,248,242,0.12);
+  border: 1px solid rgba(253,248,242,0.2);
+  border-radius: 20px;
+  color: var(--cream); font-size: 12px; font-weight: 500;
+  padding: 6px 12px; cursor: pointer;
+  display: flex; align-items: center; gap: 5px;
+  transition: background 0.15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.hdr-btn:active { background: rgba(253,248,242,0.22); }
+.hdr-btn.gold { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.hdr-btn.gold:active { background: #b07e2a; }
+
+/* ── SCROLL CONTAINER ─────────────────────────────────────────────── */
+.scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.scroll::-webkit-scrollbar { display: none; }
+
+/* ── HOME SCREEN ──────────────────────────────────────────────────── */
+#home .hdr { background: transparent; position: absolute; top:0; left:0; right:0; z-index:20; }
+#home .hero {
+  background: var(--red-dark);
+  padding: calc(var(--safe-top) + 70px) 22px 36px;
+  position: relative; overflow: hidden; flex-shrink: 0;
+}
+#home .hero::before {
+  content: '粵 川 滬 台 陝 新 湘 滇 黔';
+  position: absolute; bottom: -10px; left: -10px; right: 0;
+  font-size: 80px; opacity: 0.05; color: var(--gold);
+  letter-spacing: 8px; white-space: nowrap; pointer-events: none;
+  overflow: hidden;
+}
+.hero-eyebrow {
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 10px; font-weight: 500;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 40px; font-weight: 900; color: var(--cream);
+  line-height: 1.05; margin-bottom: 10px;
+}
+.hero-title em { color: var(--gold); font-style: normal; }
+.hero-sub {
+  font-size: 13px; color: rgba(253,248,242,0.6);
+  line-height: 1.65; font-weight: 300;
+}
+
+/* ── SEARCH BAR ───────────────────────────────────────────────────── */
+.search-wrap {
+  padding: 0 16px;
+  margin-top: -22px;
+  position: relative; z-index: 5; flex-shrink: 0;
+}
+.search-inner {
+  background: var(--cream);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  display: flex; align-items: center;
+  padding: 0 14px; gap: 10px;
+}
+.search-inner input {
+  flex: 1; border: none; background: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; color: var(--ink);
+  padding: 14px 0; outline: none;
+}
+.search-inner input::placeholder { color: var(--ink-muted); }
+.search-icon { color: var(--ink-muted); font-size: 16px; flex-shrink: 0; }
+
+/* ── PILL ROW ─────────────────────────────────────────────────────── */
+.pills-wrap {
+  padding: 14px 16px 6px;
+  display: flex; gap: 8px; flex-shrink: 0;
+  overflow-x: auto;
+}
+.pills-wrap::-webkit-scrollbar { display: none; }
+.pill {
+  background: var(--cream); border: 1.5px solid var(--border);
+  border-radius: 20px; padding: 7px 14px;
+  font-size: 12px; font-weight: 500; color: var(--ink-soft);
+  white-space: nowrap; cursor: pointer;
+  transition: all 0.15s;
+}
+.pill.active { background: var(--red); border-color: var(--red); color: white; }
+.pill:active { transform: scale(0.96); }
+
+/* ── SECTION HEADERS ──────────────────────────────────────────────── */
+.sec-hdr {
+  display: flex; align-items: baseline;
+  justify-content: space-between;
+  padding: 18px 18px 10px; flex-shrink: 0;
+}
+.sec-hdr h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px; font-weight: 700;
+}
+.sec-hdr .count {
+  font-size: 12px; color: var(--ink-muted); font-weight: 400;
+}
+
+/* ── REGION CARDS ─────────────────────────────────────────────────── */
+.region-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px; padding: 0 16px 100px;
+}
+.region-card {
+  background: var(--cream);
+  border-radius: var(--radius);
+  padding: 18px 16px 16px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: transform 0.18s, box-shadow 0.18s;
+  position: relative; overflow: hidden;
+  box-shadow: 0 2px 12px rgba(44,24,16,0.07);
+}
+.region-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--rc-color, var(--red));
+}
+.region-card:active { transform: scale(0.97); box-shadow: none; }
+.rc-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+.rc-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 14px; font-weight: 700; line-height: 1.25;
+  color: var(--ink); margin-bottom: 4px;
+}
+.rc-province {
+  font-size: 10px; color: var(--ink-muted);
+  letter-spacing: 0.3px; line-height: 1.4;
+  font-weight: 300;
+}
+.rc-count {
+  margin-top: 10px;
+  display: inline-flex; align-items: center;
+  background: rgba(0,0,0,0.05); border-radius: 10px;
+  padding: 3px 8px; font-size: 11px; font-weight: 500;
+  color: var(--ink-soft);
+}
+
+/* ── FAB ──────────────────────────────────────────────────────────── */
+.fab {
+  position: fixed; bottom: calc(var(--safe-bot) + 22px); right: 20px;
+  background: var(--red); color: white;
+  border: none; border-radius: 28px;
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  box-shadow: 0 6px 28px rgba(181,52,28,0.4);
+  cursor: pointer; z-index: 50;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.fab:active { transform: scale(0.96); box-shadow: 0 2px 12px rgba(181,52,28,0.3); }
+.fab .fab-icon { font-size: 16px; }
+
+/* ── DISH FILTER ──────────────────────────────────────────────────── */
+.dish-filter-row {
+  padding: 6px 16px 0;
+  flex-shrink: 0; overflow-x: auto;
+  display: flex; gap: 8px;
+}
+.dish-filter-row::-webkit-scrollbar { display: none; }
+.dish-chip {
+  background: var(--bg2); border: 1.5px solid var(--border);
+  border-radius: 8px; padding: 6px 12px;
+  font-size: 12px; color: var(--ink-soft);
+  white-space: nowrap; cursor: pointer;
+  transition: all 0.15s; font-weight: 400;
+}
+.dish-chip.active { border-color: var(--gold); background: var(--gold); color: var(--ink); font-weight: 500; }
+
+/* ── RESTAURANT CARDS ─────────────────────────────────────────────── */
+.rest-list { padding: 10px 16px 120px; display: flex; flex-direction: column; gap: 12px; }
+.rest-card {
+  background: var(--cream);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(44,24,16,0.07);
+  overflow: hidden; cursor: pointer;
+  transition: transform 0.18s, box-shadow 0.18s;
+  position: relative;
+}
+.rest-card:active { transform: scale(0.98); box-shadow: none; }
+.rest-card-accent {
+  height: 3px;
+  background: var(--rc-color, var(--red));
+}
+.rest-card-body { padding: 14px 16px 16px; }
+.rest-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px; font-weight: 700; color: var(--ink);
+  line-height: 1.2; margin-bottom: 4px;
+}
+.rest-meta {
+  font-size: 11px; color: var(--ink-muted);
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 10px; font-weight: 400;
+}
+.rest-meta .dot { opacity: 0.4; }
+.rest-region-badge {
+  display: inline-block;
+  background: rgba(0,0,0,0.06);
+  border-radius: 6px; padding: 2px 7px;
+  font-size: 10px; font-weight: 500; color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+.rest-dishes {
+  display: flex; flex-wrap: wrap; gap: 5px;
+}
+.rest-dish-tag {
+  background: rgba(181,52,28,0.08);
+  border: 1px solid rgba(181,52,28,0.15);
+  color: var(--red-dark);
+  border-radius: 6px; padding: 3px 9px;
+  font-size: 11px;
+}
+.rest-fav-btn {
+  position: absolute; top: 14px; right: 14px;
+  background: none; border: none; font-size: 20px;
+  cursor: pointer; z-index: 2;
+  transition: transform 0.15s;
+}
+.rest-fav-btn:active { transform: scale(1.3); }
+.rest-notes {
+  margin-top: 8px; font-size: 11px;
+  color: var(--ink-muted); font-style: italic; line-height: 1.5;
+}
+.halal-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: #e8f5e9; border: 1px solid #a5d6a7;
+  border-radius: 6px; padding: 2px 7px;
+  font-size: 10px; font-weight: 600; color: #2e7d32;
+  margin-left: 4px;
+}
+
+/* ── DETAIL SHEET ─────────────────────────────────────────────────── */
+#detail { background: var(--bg); }
+.detail-hero {
+  background: var(--red-dark);
+  padding: calc(var(--safe-top) + 64px) 22px 28px;
+  position: relative; overflow: hidden;
+}
+.detail-hero::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+}
+.detail-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 900; color: var(--cream);
+  line-height: 1.1; margin-bottom: 6px;
+}
+.detail-city { font-size: 13px; color: rgba(253,248,242,0.65); }
+.detail-body { padding: 8px 20px 120px; }
+.detail-section { margin-top: 22px; }
+.detail-section h3 {
+  font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 10px; font-weight: 600;
+}
+.detail-region-chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--cream); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px;
+  width: 100%; margin-bottom: 6px;
+}
+.detail-region-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--rc-color, var(--red)); flex-shrink: 0;
+}
+.detail-region-text { font-size: 13px; font-weight: 500; color: var(--ink); }
+.detail-region-sub { font-size: 11px; color: var(--ink-muted); margin-top: 1px; }
+.detail-dish-list { display: flex; flex-direction: column; gap: 8px; }
+.detail-dish {
+  background: var(--cream); border: 1px solid var(--border);
+  border-radius: 10px; padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.dish-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px; font-weight: 900; color: var(--gold);
+  line-height: 1; width: 22px; flex-shrink: 0;
+}
+.dish-name { font-size: 14px; font-weight: 500; color: var(--ink); }
+.detail-notes-box {
+  background: rgba(201,150,58,0.1);
+  border: 1px solid rgba(201,150,58,0.25);
+  border-radius: 10px; padding: 14px;
+  font-size: 13px; color: var(--ink-soft);
+  line-height: 1.65; font-style: italic;
+}
+.detail-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.action-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border: none; border-radius: 12px; padding: 15px;
+  font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 500;
+  cursor: pointer; transition: transform 0.15s, opacity 0.15s;
+}
+.action-btn:active { transform: scale(0.98); opacity: 0.85; }
+.action-btn.primary { background: var(--red); color: white; }
+.action-btn.secondary { background: var(--cream); border: 1.5px solid var(--border); color: var(--ink); }
+.action-btn.fav { background: var(--cream); border: 1.5px solid var(--border); color: var(--ink); }
+
+/* ── MAP SCREEN ───────────────────────────────────────────────────── */
+#mapscreen { background: #1C0F07; }
+#mapscreen .hdr { background: #1C0F07; }
+#map { flex: 1; }
+
+.map-bottom-sheet {
+  background: var(--cream);
+  border-radius: 20px 20px 0 0;
+  padding: 14px 16px calc(var(--safe-bot) + 16px);
+  box-shadow: 0 -4px 32px rgba(44,24,16,0.15);
+  flex-shrink: 0; max-height: 45vh; overflow-y: auto;
+}
+.map-bottom-sheet::-webkit-scrollbar { display: none; }
+.map-sheet-handle {
+  width: 36px; height: 4px; background: var(--border);
+  border-radius: 2px; margin: 0 auto 12px;
+}
+.map-sheet-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--ink);
+}
+.map-rest-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-top: 1px solid var(--border);
+  cursor: pointer;
+}
+.map-rest-row:first-of-type { border-top: none; }
+.map-rest-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.map-rest-name { font-size:14px; font-weight:500; flex:1; color: var(--ink); }
+.map-rest-city { font-size:11px; color: var(--ink-muted); }
+
+/* ── SURPRISE MODAL ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 200;
+  background: rgba(28,15,7,0.6);
+  display: flex; align-items: flex-end;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-sheet {
+  background: var(--cream);
+  border-radius: 24px 24px 0 0;
+  padding: 20px 22px calc(var(--safe-bot) + 28px);
+  width: 100%;
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+}
+.modal-overlay.open .modal-sheet { transform: translateY(0); }
+.modal-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 18px; }
+.modal-surprise-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 26px; font-weight: 900; color: var(--ink); line-height: 1.1;
+  margin-bottom: 6px;
+}
+.modal-surprise-meta { font-size:13px; color:var(--ink-muted); margin-bottom: 18px; }
+.modal-dishes { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px; }
+.modal-dish { background: rgba(181,52,28,0.08); border:1px solid rgba(181,52,28,0.15); border-radius:8px; padding:5px 11px; font-size:12px; color:var(--red-dark); }
+.modal-actions { display:flex; flex-direction:column; gap:10px; }
+
+/* ── LEAFLET OVERRIDES ────────────────────────────────────────────── */
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+  box-shadow: var(--shadow-lg) !important;
+  font-family: 'DM Sans', sans-serif !important;
+  border: 1px solid var(--border) !important;
+}
+.leaflet-popup-content { margin: 14px 16px !important; }
+.popup-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 15px; font-weight: 700; color: var(--ink);
+  margin-bottom: 3px;
+}
+.popup-city { font-size: 11px; color: var(--ink-muted); margin-bottom: 8px; }
+.popup-dishes { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+.popup-dish { background: rgba(181,52,28,0.08); border-radius:5px; padding: 2px 7px; font-size:11px; color: var(--red-dark); }
+.popup-link {
+  display: block; text-align: center;
+  background: var(--red); color: white;
+  border-radius: 8px; padding: 8px;
+  font-size: 13px; font-weight: 500; text-decoration: none;
+  margin-top: 4px;
+}
+
+/* ── CUSTOM MAP MARKER ────────────────────────────────────────────── */
+.map-marker {
+  width: 28px; height: 28px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+}
+.map-marker-inner {
+  transform: rotate(45deg);
+  font-size: 12px;
+}
+
+/* ── EMPTY STATE ──────────────────────────────────────────────────── */
+.empty {
+  padding: 60px 30px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+}
+.empty-icon { font-size: 48px; opacity: 0.4; }
+.empty-title { font-family:'Playfair Display',serif; font-size:20px; color:var(--ink-soft); }
+.empty-sub { font-size:14px; color:var(--ink-muted); line-height:1.6; }
+
+/* ── ANIMATIONS ───────────────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(14px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.region-card { animation: fadeUp 0.35s ease both; }
+.rest-card { animation: fadeUp 0.3s ease both; }
+
+/* ── TABS ─────────────────────────────────────────────────────────── */
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: rgba(253,248,242,0.95);
+  backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border);
+  display: flex;
+  padding-bottom: var(--safe-bot);
+  z-index: 100;
+}
+.tab-item {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  padding: 10px 0 8px; cursor: pointer;
+  transition: opacity 0.15s;
+  border: none; background: none;
+}
+.tab-icon { font-size: 22px; }
+.tab-label { font-size: 10px; font-weight: 500; color: var(--ink-muted); letter-spacing: 0.3px; }
+.tab-item.active .tab-label { color: var(--red); }
+.tab-item.active .tab-icon { filter: none; }
+
+/* ── FAVORITES SCREEN ─────────────────────────────────────────────── */
+.no-fav {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; padding: 40px;
+  text-align: center;
+}
+.no-fav-icon { font-size: 56px; opacity: 0.35; }
+.no-fav-title { font-family:'Playfair Display',serif; font-size:22px; color:var(--ink-soft); }
+.no-fav-sub { font-size:14px; color:var(--ink-muted); line-height:1.65; }
+</style>
+</head>
+<body>
+
+<!-- ══ HOME SCREEN ══════════════════════════════════════════════════ -->
+<div class="screen active" id="home">
+  <div class="hero" style="flex-shrink:0">
+    <div class="hdr" style="background:transparent;position:absolute;top:0;left:0;right:0;z-index:20;padding-top:calc(var(--safe-top) + 14px)">
+      <div class="hdr-title">626 Eats<small>SGV Food Guide</small></div>
+      <div class="hdr-actions">
+        <button class="hdr-btn gold" onclick="openSurprise()">🎲 Surprise</button>
+      </div>
+    </div>
+    <div style="height:56px"></div>
+    <div class="hero-eyebrow">San Gabriel Valley · The 626</div>
+    <div class="hero-title"><em>60+</em> restaurants<br>across the SGV</div>
+    <div class="hero-sub">From Cantonese dim sum to Uyghur laghman — explore every corner of Chinese cuisine in LA's greatest food destination.</div>
+  </div>
+
+  <div class="search-wrap" style="flex-shrink:0">
+    <div class="search-inner">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="home-search" placeholder="Search restaurants or dishes…" oninput="filterHome()">
+    </div>
+  </div>
+
+  <div class="pills-wrap" id="home-pills" style="flex-shrink:0">
+    <span class="pill active" data-filter="all" onclick="setPill(this,'all')">All</span>
+    <span class="pill" data-filter="halal" onclick="setPill(this,'halal')">🌙 Halal</span>
+    <span class="pill" data-filter="fav" onclick="setPill(this,'fav')">♥ Saved</span>
+    <span class="pill" data-filter="dim-sum" onclick="setPill(this,'dim-sum')">Dim Sum</span>
+    <span class="pill" data-filter="noodles" onclick="setPill(this,'noodles')">Noodles</span>
+    <span class="pill" data-filter="hotpot" onclick="setPill(this,'hotpot')">Hot Pot</span>
+    <span class="pill" data-filter="seafood" onclick="setPill(this,'seafood')">Seafood</span>
+  </div>
+
+  <div class="scroll">
+    <div class="sec-hdr">
+      <h2>Browse by Region</h2>
+      <span class="count" id="region-count"></span>
+    </div>
+    <div class="region-grid" id="region-grid"></div>
+  </div>
+</div>
+
+<!-- ══ REGION SCREEN ════════════════════════════════════════════════ -->
+<div class="screen" id="regionscreen">
+  <div class="hdr">
+    <button class="hdr-back" onclick="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+      Back
+    </button>
+    <div class="hdr-title" id="region-hdr-title">Region</div>
+    <div class="hdr-actions">
+      <button class="hdr-btn" onclick="showMapForRegion()">🗺 Map</button>
+    </div>
+  </div>
+
+  <div class="dish-filter-row" id="dish-chips"></div>
+
+  <div class="scroll">
+    <div class="sec-hdr">
+      <h2 id="region-list-title">Restaurants</h2>
+      <span class="count" id="region-rest-count"></span>
+    </div>
+    <div class="rest-list" id="region-rest-list"></div>
+  </div>
+</div>
+
+<!-- ══ DETAIL SCREEN ════════════════════════════════════════════════ -->
+<div class="screen" id="detail">
+  <div class="hdr">
+    <button class="hdr-back" onclick="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+      Back
+    </button>
+    <div class="hdr-title" id="detail-hdr"></div>
+  </div>
+  <div class="scroll">
+    <div class="detail-hero" id="detail-hero">
+      <div class="detail-name" id="detail-name"></div>
+      <div class="detail-city" id="detail-city"></div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section">
+        <h3>Regional Style</h3>
+        <div class="detail-region-chip" id="detail-region-chip">
+          <div class="detail-region-dot" id="detail-region-dot"></div>
+          <div>
+            <div class="detail-region-text" id="detail-region-text"></div>
+            <div class="detail-region-sub" id="detail-region-sub"></div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-section">
+        <h3>Must-Order Dishes</h3>
+        <div class="detail-dish-list" id="detail-dishes"></div>
+      </div>
+      <div class="detail-section" id="detail-notes-section">
+        <h3>Notes & Accolades</h3>
+        <div class="detail-notes-box" id="detail-notes"></div>
+      </div>
+      <div class="detail-section">
+        <h3>Actions</h3>
+        <div class="detail-actions">
+          <button class="action-btn primary" id="detail-maps-btn" onclick="openInMaps()">🗺 Open in Google Maps</button>
+          <button class="action-btn secondary" id="detail-map-btn" onclick="showMapForOne()">📍 Show on Map</button>
+          <button class="action-btn fav" id="detail-fav-btn" onclick="toggleFavDetail()">♡ Save to Favorites</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MAP SCREEN ════════════════════════════════════════════════════ -->
+<div class="screen" id="mapscreen">
+  <div class="hdr">
+    <button class="hdr-back" onclick="goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+      Back
+    </button>
+    <div class="hdr-title" id="map-hdr-title">Map</div>
+  </div>
+  <div id="map"></div>
+  <div class="map-bottom-sheet">
+    <div class="map-sheet-handle"></div>
+    <div class="map-sheet-title" id="map-sheet-title">Restaurants</div>
+    <div id="map-sheet-list"></div>
+  </div>
+</div>
+
+<!-- ══ FAVORITES SCREEN ═════════════════════════════════════════════ -->
+<div class="screen" id="favscreen">
+  <div class="hdr">
+    <div class="hdr-title">Saved<small>Your favorites</small></div>
+    <div class="hdr-actions">
+      <button class="hdr-btn" id="fav-map-btn" onclick="showMapForFavs()" style="display:none">🗺 Map</button>
+    </div>
+  </div>
+  <div class="scroll" id="fav-scroll">
+    <div class="no-fav" id="no-fav">
+      <div class="no-fav-icon">♡</div>
+      <div class="no-fav-title">No saved spots yet</div>
+      <div class="no-fav-sub">Tap the heart on any restaurant to save it here for quick access.</div>
+    </div>
+    <div class="rest-list" id="fav-list"></div>
+  </div>
+</div>
+
+<!-- ══ TAB BAR ════════════════════════════════════════════════════════ -->
+<div class="tab-bar" id="tab-bar">
+  <button class="tab-item active" data-screen="home" onclick="gotoTab('home',this)">
+    <span class="tab-icon">🍜</span>
+    <span class="tab-label">Browse</span>
+  </button>
+  <button class="tab-item" data-screen="favscreen" onclick="gotoTab('favscreen',this)">
+    <span class="tab-icon">♥</span>
+    <span class="tab-label">Saved</span>
+  </button>
+</div>
+
+<!-- ══ SURPRISE MODAL ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="surprise-modal" onclick="closeSurprise(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--gold);margin-bottom:8px;font-weight:600">🎲 Tonight's Pick</div>
+    <div class="modal-surprise-name" id="modal-name"></div>
+    <div class="modal-surprise-meta" id="modal-meta"></div>
+    <div class="modal-dishes" id="modal-dishes"></div>
+    <div class="modal-actions">
+      <button class="action-btn primary" id="modal-maps-btn">🗺 Open in Google Maps</button>
+      <button class="action-btn secondary" onclick="openSurprise()">🎲 Pick Another</button>
+      <button class="action-btn fav" id="modal-detail-btn">View Full Details</button>
+      <button class="action-btn" style="color:var(--ink-muted);font-size:14px;background:none;border:none" onclick="closeSurprise()">Dismiss</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   DATA
+═══════════════════════════════════════════════════════════════════ */
+const RESTAURANTS = [
+  // CANTONESE DIM SUM
+  {id:1,name:"Sea Harbour Seafood",city:"Rosemead",region:"Cantonese / Dim Sum",province:"Guangdong (Cantonese)",category:"Dim Sum & Seafood Banquet",dishes:["Truffle Siu Mai","Gold Lava Buns","Egg White Custard Tart"],notes:"SGV's most celebrated dim sum; 20-year institution",halal:false,lat:34.0601,lng:-118.0724,tags:["dim-sum","seafood"]},
+  {id:2,name:"Lunasia Dim Sum House",city:"Alhambra",region:"Cantonese / Dim Sum",province:"Guangdong (Cantonese)",category:"Dim Sum",dishes:["Pork Siu Mai","Spinach & Shrimp Dumplings","Pan-Fried String Beans w/ Pork"],notes:"Infatuation 8.5; serves dim sum at dinner too",halal:false,lat:34.0817,lng:-118.1272,tags:["dim-sum"]},
+  {id:3,name:"Chef Tony Seafood",city:"Arcadia",region:"Cantonese / Dim Sum",province:"Guangdong (Cantonese)",category:"Dim Sum & Seafood Banquet",dishes:["Truffle-Topped Shu Mai","French-Style Baked Pork Bun","Mummy-Wrapped Fried Prawns"],notes:"Sea Harbour spinoff; modernized Cantonese dim sum",halal:false,lat:34.1397,lng:-118.0353,tags:["dim-sum","seafood"]},
+  {id:4,name:"NBC Seafood Restaurant",city:"Monterey Park",region:"Cantonese / Dim Sum",province:"Guangdong (Cantonese)",category:"Dim Sum (push-cart)",dishes:["Crystal Shrimp Dumplings","Steamed Pork Ribs","Baked Char Siu Bao"],notes:"One of the few remaining push-cart dim sum halls",halal:false,lat:34.0633,lng:-118.1231,tags:["dim-sum","seafood"]},
+  {id:5,name:"888 Seafood Restaurant",city:"Rosemead",region:"Cantonese / Dim Sum",province:"Guangdong (Cantonese)",category:"Dim Sum (push-cart)",dishes:["Har Gow","Turnip Cake (Lo Bak Go)","Cheung Fun"],notes:"Old-school cart service; landmark banquet hall",halal:false,lat:34.0659,lng:-118.0780,tags:["dim-sum","seafood"]},
+  {id:6,name:"Crystal Palace",city:"Monterey Park",region:"Cantonese / Dim Sum",province:"Guangdong (Cantonese)",category:"Dim Sum",dishes:["BBQ Pork Buns (Baked)","Shrimp Har Gow","Egg Yolk Lava Buns"],notes:"Praised for flaky buns and piping-hot dumplings",halal:false,lat:34.0641,lng:-118.1180,tags:["dim-sum"]},
+  {id:7,name:"Lunasia Dim Sum (Pasadena)",city:"Pasadena",region:"Cantonese / Dim Sum",province:"Guangdong (Cantonese)",category:"Dim Sum",dishes:["Chicken Stuffed w/ Shrimp Paste","Luffa w/ Salted Egg Yolk","Wokked Chayote w/ Pork"],notes:"Saveur-featured; seasonal & quality-focused; opened 2022",halal:false,lat:34.1478,lng:-118.1445,tags:["dim-sum"]},
+  // CANTONESE ROAST
+  {id:8,name:"Pearl River Deli",city:"San Gabriel",region:"Cantonese Roast & Modern",province:"Guangdong (Cantonese / Taishan)",category:"Cantonese BBQ & Modern",dishes:["Roasted Char Siu Pork","Hainan Chicken Rice (wknd)","Seasonal Market Plates"],notes:"Accolades: LA Times, NY Times, Eater, Infatuation",halal:false,lat:34.0964,lng:-118.1059,tags:["seafood"]},
+  {id:9,name:"Auntie Kitchen",city:"Alhambra",region:"Cantonese Roast & Modern",province:"Guangdong (Cantonese)",category:"Cantonese BBQ & Congee",dishes:["Congee","Cantonese BBQ Plates","Pineapple Bun (Bo Luo Bao)"],notes:"Casual; café prices for classic roast & rice plates",halal:false,lat:34.0820,lng:-118.1295,tags:[]},
+  // CANTONESE SEAFOOD
+  {id:10,name:"Newport Seafood",city:"San Gabriel",region:"Cantonese Seafood",province:"Guangdong / Vietnamese-Chinese",category:"Cantonese-Vietnamese Seafood",dishes:["House Special Lobster (jalapeño-butter)","Shaking Beef","Wok-Fried Clams"],notes:"SGV lobster institution; Infatuation reviewed",halal:false,lat:34.0968,lng:-118.1040,tags:["seafood"]},
+  {id:11,name:"Boston Lobster",city:"Rosemead",region:"Cantonese Seafood",province:"Guangdong (Cantonese)",category:"Cantonese Seafood Banquet",dishes:["Live Lobster (various preps)","Peking-Style Lobster","Stir-Fried Crab"],notes:"Multi-location SGV seafood chain",halal:false,lat:34.0627,lng:-118.0817,tags:["seafood"]},
+  {id:12,name:"Lu's Garden",city:"San Gabriel",region:"Cantonese Seafood",province:"Guangdong (Cantonese)",category:"Cantonese Seafood & Dim Sum",dishes:["Live Lobster","Stir-Fried Pea Sprouts w/ Garlic","Roast Duck"],notes:"Yelp top-10 consistent performer",halal:false,lat:34.0971,lng:-118.1055,tags:["seafood","dim-sum"]},
+  // TEOCHEW
+  {id:13,name:"Kim Kee Noodle House",city:"Monterey Park / Rosemead",region:"Teochew (Chiu Chow)",province:"Eastern Guangdong (Chaozhou)",category:"Teochew Noodles & Breakfast",dishes:["Teochew Noodle Soup (shrimp & beef)","Allium-Infused Oil Noodles","Rice Noodle Dishes"],notes:"One of oldest Teochew restaurants in SGV; Far East Plaza fixture since 1970s",halal:false,lat:34.0609,lng:-118.1227,tags:["noodles"]},
+  // HK CAFE
+  {id:14,name:"Tasty Garden",city:"Alhambra",region:"Hong Kong Café (Cha Chaan Teng)",province:"Hong Kong",category:"HK-Style Café",dishes:["HK Milk Tea","Egg Waffles (Gai Daan Zai)","Cantonese Comfort Dishes"],notes:"Mini SoCal chain; Alhambra location praised for milk tea & egg waffles",halal:false,lat:34.0756,lng:-118.1270,tags:[]},
+  {id:15,name:"JJ Cafe",city:"Monterey Park",region:"Hong Kong Café (Cha Chaan Teng)",province:"Hong Kong",category:"HK-Style Café",dishes:["Baked Pork Chop Rice","HK Milk Tea","East-West Fusion Dishes"],notes:"One of first popular cha chaan tengs in SGV",halal:false,lat:34.0621,lng:-118.1253,tags:[]},
+  {id:16,name:"HK Macau Bistro",city:"San Gabriel",region:"Hong Kong Café (Cha Chaan Teng)",province:"Hong Kong / Macau",category:"HK-Style Café",dishes:["Baked Portuguese Egg Tarts","Pineapple Bun w/ Butter","HK Milk Tea"],notes:"Macanese-influenced HK café",halal:false,lat:34.0960,lng:-118.1051,tags:[]},
+  {id:17,name:"Huge Tree Pastry",city:"Monterey Park",region:"Hong Kong Café / Taiwanese Breakfast",province:"Hong Kong / Taiwan",category:"Taiwanese-HK Breakfast",dishes:["Fantuan (Sticky Rice Roll)","Soy Milk","Steamed Dumplings"],notes:"Beloved breakfast spot; sells out early",halal:false,lat:34.0632,lng:-118.1220,tags:[]},
+  // SICHUAN
+  {id:18,name:"Chengdu Taste",city:"Alhambra",region:"Sichuan (Chengdu-style)",province:"Sichuan Province",category:"Sichuan",dishes:["Toothpick Lamb w/ Cumin","Dan Dan Noodles","Boiled Fish w/ Green Pepper Sauce"],notes:"Landmark restaurant that popularized Sichuan in LA; Infatuation favorite",halal:false,lat:34.0831,lng:-118.1286,tags:["noodles"]},
+  {id:19,name:"Szechuan Impression",city:"Alhambra",region:"Sichuan (Chengdu-style)",province:"Sichuan Province",category:"Sichuan",dishes:["Tea-Smoked Duck","Smoked Pork Ribs","Liangfen (Cold Mung Bean Jelly)"],notes:"Founded by Chengdu Taste alumni; stylish modern Sichuan décor",halal:false,lat:34.0838,lng:-118.1301,tags:[]},
+  {id:20,name:"Mian",city:"San Gabriel",region:"Sichuan / Chongqing Noodles",province:"Sichuan Province (Chongqing)",category:"Sichuan Noodle Bar",dishes:["Chongqing-Style Noodles","Dan Dan Noodles","House-Made Noodle Bowls"],notes:"From Chengdu Taste team; mala noodle bar format",halal:false,lat:34.0955,lng:-118.1043,tags:["noodles"]},
+  {id:21,name:"Spicy City",city:"Rosemead",region:"Sichuan / Chongqing-style",province:"Sichuan / Chongqing",category:"Sichuan",dishes:["Hot Pepper Chicken (buried in chiles)","Twice-Cooked Pork w/ Bao","Chongqing Hot Noodles"],notes:"Extensive Chongqing-style menu; heavy on fresh chiles",halal:false,lat:34.0634,lng:-118.0866,tags:["noodles"]},
+  {id:22,name:"Zui Xiang Yuan",city:"Alhambra",region:"Sichuan / Northern Mixed",province:"Sichuan Province",category:"Sichuan & Northern Chinese",dishes:["Pan-Fried Pork Buns (Crispy)","Spicy Beef Noodle Soup","Potato Noodles"],notes:"Hole-in-the-wall; strong Sichuan and northern dishes",halal:false,lat:34.0812,lng:-118.1290,tags:["noodles"]},
+  // SHANGHAINESE
+  {id:23,name:"Din Tai Fung",city:"Arcadia",region:"Shanghainese / Jiangnan",province:"Shanghai / Jiangsu (Taiwan-rooted)",category:"XLB & Taiwanese-Shanghainese",dishes:["Xiao Long Bao (Soup Dumplings)","Steamed Shrimp & Pork Dumplings","Truffle Fried Rice"],notes:"Flagship SGV location; iconic lantern chandelier; Westfield Santa Anita",halal:false,lat:34.1347,lng:-118.0260,tags:["dim-sum"]},
+  {id:24,name:"Jiang Nan Spring",city:"Alhambra",region:"Shanghainese / Jiangnan",province:"Shanghai / Jiangsu",category:"Shanghainese",dishes:["Dongpo Braised Pork","Lion's Head Meatballs","Stir-Fried Rice Cakes (Nian Gao)"],notes:"Infatuation-noted; large portions, expert servers",halal:false,lat:34.0810,lng:-118.1270,tags:[]},
+  {id:25,name:"Auntie Qiu Kitchen",city:"Alhambra",region:"Shanghainese / Jiangnan",province:"Shanghai",category:"Shanghainese Fast-Casual",dishes:["Pan-Fried Pork Buns (Sheng Jian Bao)","Noodle Soups","Braised Dishes"],notes:"Shanghai-style comfort food at reasonable prices",halal:false,lat:34.0818,lng:-118.1295,tags:["noodles"]},
+  {id:26,name:"Good Alley",city:"Rosemead",region:"Shanghainese / Northern Mixed",province:"Shanghai / Northern China",category:"Modern Chinese",dishes:["Soup Dumplings (XLB)","Wagyu Beef Burger","Cold Sesame Noodles"],notes:"Hand-muddled jasmine lime tea; critic + creator pick 2024",halal:false,lat:34.0640,lng:-118.0769,tags:["noodles","dim-sum"]},
+  {id:27,name:"Paradise Dynasty",city:"Arcadia",region:"Shanghainese / Singaporean",province:"Shanghai / Singapore",category:"XLB & Multi-Regional",dishes:["Rainbow Xiao Long Bao (8 flavors)","Shanghainese Pan-Fried Buns","Noodle & Stir-Fry Dishes"],notes:"Singapore-based chain; colorful XLB a viral hit",halal:false,lat:34.1351,lng:-118.0265,tags:["dim-sum"]},
+  {id:28,name:"No. 8 on the Bund",city:"San Gabriel",region:"Shanghainese / Jiangnan",province:"Shanghai",category:"Shanghainese",dishes:["Scallion Oil Noodles","Braised Pork Belly","XLB"],notes:"Named after Shanghai's Bund waterfront district",halal:false,lat:34.0967,lng:-118.1058,tags:["noodles"]},
+  // TAIWANESE
+  {id:29,name:"Dai Ho Restaurant",city:"Temple City",region:"Taiwanese",province:"Taiwan",category:"Taiwanese Beef Noodle",dishes:["Spicy Beef Noodle Soup","Braised Pork Rice (Lu Rou Fan)","Cold Appetizer Plates"],notes:"Infatuation pick; lunch-only, broth-powered conveyor belt",halal:false,lat:34.1071,lng:-118.0570,tags:["noodles"]},
+  {id:30,name:"Blue Magpie",city:"Arcadia",region:"Taiwanese (Contemporary Fine Dining)",province:"Taiwan",category:"Contemporary Taiwanese Fine Dining",dishes:["Taiwanese Braised Pork Belly Rice","Oyster Vermicelli (elevated)","Seasonal Taiwanese Tasting Plates"],notes:"Opened 2023; elevated reimagining of Taiwanese classics",halal:false,lat:34.1392,lng:-118.0366,tags:[]},
+  {id:31,name:"Bopomofu",city:"Alhambra",region:"Taiwanese-American Fusion",province:"Taiwan / California",category:"Taiwanese-American",dishes:["Honey-Walnut Shrimp Burger","Scallion Pancake Sandwich","Boba Slushes"],notes:"Saveur-featured; playful Taiwanese-American mashups",halal:false,lat:34.0826,lng:-118.1280,tags:[]},
+  {id:32,name:"Pepper Tavern",city:"San Gabriel",region:"Taiwanese",province:"Taiwan",category:"Taiwanese Comfort Food",dishes:["San Bei Ji (Three-Cup Chicken)","Taiwanese Pork Chop Rice","Stinky Tofu"],notes:"Yelp top-10 San Gabriel; authentic Taiwanese comfort food",halal:false,lat:34.0972,lng:-118.1050,tags:[]},
+  // BEIJING / IMPERIAL
+  {id:33,name:"Bistro Na's",city:"Temple City",region:"Beijing Imperial (Qing Dynasty)",province:"Beijing / Imperial Court",category:"Imperial Chinese Fine Dining",dishes:["Peking Duck (8 per night)","Emperor's Jar Soup","Stir-Fried Angus Beef w/ Green Peppercorn"],notes:"Infatuation 9.4; Saveur-featured; SGV's top imperial restaurant",halal:false,lat:34.1069,lng:-118.0558,tags:[]},
+  {id:34,name:"Ji Rong Peking Duck",city:"San Gabriel",region:"Beijing / Northern Chinese",province:"Beijing",category:"Peking Duck Specialist",dishes:["Peking Duck","Duck Breast Slices","Duck Bone Soup"],notes:"Yelp top-10 San Gabriel; dedicated Peking duck house",halal:false,lat:34.0969,lng:-118.1060,tags:[]},
+  {id:35,name:"101 Noodle Express",city:"Alhambra",region:"Beijing / Northern Chinese",province:"Beijing / Northern China",category:"Northern Chinese Noodles & Rolls",dishes:["Beef Roll (Niu Rou Juan Bing)","Hand-Pulled Noodles","Pan-Fried Dumplings (Guotie)"],notes:"Iconic SGV-born chain; beef roll a California-Beijing mashup",halal:false,lat:34.0801,lng:-118.1295,tags:["noodles"]},
+  {id:36,name:"Yang's Kitchen",city:"Alhambra",region:"Modern Chinese-American / Taiwanese",province:"Taiwan / California",category:"Modern Chinese-American",dishes:["Dan Dan Campanelle (Peanut Sauce)","Hainan Fish Rice w/ Chili Butter","Creamy Prawns & Millet"],notes:"Infatuation 9.1; wine-friendly; cool bookstore-café vibe",halal:false,lat:34.0805,lng:-118.1264,tags:["noodles"]},
+  // NORTHEASTERN
+  {id:37,name:"Northern Cafe",city:"San Gabriel",region:"Northern Chinese (Dongbei)",province:"Hebei / Liaoning / Northern China",category:"Northern Chinese",dishes:["Wife's Special Noodles (3-topping)","Lamb Soup Noodles","Small Round Rolled Noodles"],notes:"Infatuation pick; unique noodle styles from N. China",halal:false,lat:34.0958,lng:-118.1047,tags:["noodles"]},
+  {id:38,name:"Mama Lu's Dumpling House",city:"San Gabriel",region:"Northern Chinese (Dongbei)",province:"Northeastern China",category:"Northern Dumplings & Rice Cakes",dishes:["Pan-Fried Dumplings (Guotie)","Stir-Fried Rice Cakes","Steamed Buns"],notes:"Infatuation pick; massive portions at low prices",halal:false,lat:34.0963,lng:-118.1055,tags:[]},
+  {id:39,name:"Hui Tou Xiang",city:"San Gabriel",region:"Northern Chinese (Dongbei)",province:"Northern China",category:"Northern Chinese Potstickers",dishes:["Hui Tou Potstickers (oblong pan-fried)","Spicy Beef Noodle Soup","Pan-Fried Dumplings"],notes:"Stamp card; award-winning house potsticker style",halal:false,lat:34.0961,lng:-118.1042,tags:["noodles"]},
+  {id:40,name:"Prince Dumpling",city:"Rosemead",region:"Northern Chinese (Dongbei)",province:"Northern China / Shanghai",category:"Soup Dumplings & Dumplings",dishes:["Xiao Long Bao","Northern-Style Dumplings","Fried Rice"],notes:"Alt to Din Tai Fung; praised for broth-locked XLB",halal:false,lat:34.0618,lng:-118.0835,tags:[]},
+  // SHAANXI
+  {id:41,name:"Shaanxi Garden",city:"San Gabriel",region:"Shaanxi (Northwestern Chinese)",province:"Shaanxi Province (Xi'an)",category:"Shaanxi / Silk Road",dishes:["Rou Jia Mo (Spiced Meat Bun)","Yangrou Paomo (Lamb Bread Stew)","Hand-Cut Biang Biang Noodles"],notes:"Xi'an couple owners; wife cooks halal dishes; featured in Matador",halal:false,lat:34.0975,lng:-118.1061,tags:["noodles"]},
+  {id:42,name:"Shaanxi Gourmet",city:"San Gabriel",region:"Shaanxi (Northwestern Chinese)",province:"Shaanxi Province (Xi'an)",category:"Shaanxi / Silk Road",dishes:["Yangrou Paomo (Lamb Bread Stew)","Hand-Pulled Noodles","Lamb Kebabs"],notes:"Terracotta soldier décor; chef trained in Xi'an; Timeout LA featured",halal:false,lat:34.0972,lng:-118.1048,tags:["noodles"]},
+  // XINJIANG / UYGHUR
+  {id:43,name:"Omar Restaurant",city:"San Gabriel",region:"Xinjiang / Uyghur (Halal)",province:"Xinjiang Province",category:"Uyghur / Central Asian Halal",dishes:["Big Plate Chicken (Da Pan Ji)","Cumin Lamb Kebabs","Lamb & Hand-Pulled Noodles"],notes:"Cash only; homemade yogurt & savory milk tea; LAist featured",halal:true,lat:34.0957,lng:-118.1039,tags:["noodles","halal"]},
+  {id:44,name:"Dolan's",city:"Alhambra",region:"Xinjiang / Uyghur (Halal)",province:"Xinjiang Province",category:"Uyghur / Central Asian Halal",dishes:["Big Plate Chicken","Laghman Noodles (hand-pulled)","Beef & Lamb Naan (baked stuffed)"],notes:"Infatuation & Saveur featured; cardamom tea; excellent halal SGV",halal:true,lat:34.0822,lng:-118.1291,tags:["noodles","halal"]},
+  // HUNAN
+  {id:45,name:"Dong Ting Chun",city:"San Gabriel",region:"Hunan",province:"Hunan Province",category:"Hunan",dishes:["Perilla Bullfrog Hot Pot","Smoked Pork w/ Pickled Peppers","Spicy Fish"],notes:"Yelp top-10 San Gabriel; 2-hr waits common; full Hunan authenticity",halal:false,lat:34.0964,lng:-118.1060,tags:[]},
+  {id:46,name:"Picky Hunan",city:"Alhambra",region:"Hunan",province:"Hunan Province",category:"Hunan",dishes:["Chairman Mao's Red-Braised Pork","Steamed Fish Head w/ Chili","Hunan Spicy Fried Chicken"],notes:"Popular newer Hunan entrant in west SGV",halal:false,lat:34.0840,lng:-118.1305,tags:[]},
+  {id:47,name:"Hengry",city:"Alhambra",region:"Hunan",province:"Hunan Province",category:"Hunan",dishes:["Braised Pork Belly","Spicy Regional Dishes","Smoked Meats"],notes:"Critic + platform pick; known for authentic regional Chinese",halal:false,lat:34.0815,lng:-118.1280,tags:[]},
+  // YUNNAN
+  {id:48,name:"Yunnan Restaurant",city:"Monterey Park",region:"Yunnan (Southwestern Chinese)",province:"Yunnan Province",category:"Yunnan",dishes:["Spicy Fish Fillet","Toothpick Lamb","Sour-Spicy Cold Cucumber Ribbons"],notes:"Menu glimpse into Yunnan-Laos-Myanmar border cuisine",halal:false,lat:34.0625,lng:-118.1215,tags:[]},
+  // HOT POT
+  {id:49,name:"Hai Di Lao Hot Pot",city:"Arcadia",region:"Hot Pot (Sichuan-style)",province:"Sichuan Province (chain origin)",category:"Sichuan Hot Pot",dishes:["Customized Hot Pot Broth","Hand-Made Noodle Show","Wagyu Beef Slices"],notes:"Premium mainland China chain; theatrical tableside service",halal:false,lat:34.1344,lng:-118.0258,tags:["hotpot"]},
+  {id:50,name:"Xiao Long Kan Hot Pot",city:"San Gabriel",region:"Hot Pot (Sichuan-style)",province:"Sichuan Province (Chengdu)",category:"Sichuan Hot Pot",dishes:["Mala Broth (Numbing-Spicy)","Beef Tripe","House Specialty Dips"],notes:"Trendy Chengdu chain; prominent in SGV new-money dining wave",halal:false,lat:34.0975,lng:-118.1063,tags:["hotpot"]},
+  {id:51,name:"Little Sheep Mongolian Hot Pot",city:"Monterey Park",region:"Hot Pot (Inner Mongolian)",province:"Inner Mongolia",category:"Mongolian Hot Pot",dishes:["Lamb Slices","Inner Mongolian Broth","Hand-Made Dipping Sauce"],notes:"Original broth-based Mongolian hot pot chain",halal:false,lat:34.0629,lng:-118.1233,tags:["hotpot"]},
+  // HIGH-END
+  {id:52,name:"Meizhou Dongpo",city:"Arcadia",region:"Sichuan / High-End Contemporary",province:"Sichuan Province",category:"Upscale Sichuan & Regional",dishes:["Dongpo Pork (braised pork belly)","Meizhou Tofu","Twice-Cooked Pork"],notes:"Mainland Chinese upscale chain; Westfield Santa Anita anchor",halal:false,lat:34.1348,lng:-118.0261,tags:[]},
+  {id:53,name:"Bistro 1968",city:"San Gabriel",region:"Cantonese / Dim Sum",province:"Guangdong (Cantonese)",category:"Dim Sum (AYCE)",dishes:["Wagyu Beef Noodles","Har Gow","Egg Tarts"],notes:"All-you-can-eat dim sum ~$25/person; good budget option",halal:false,lat:34.0960,lng:-118.1043,tags:["dim-sum"]},
+  {id:54,name:"Five Five",city:"Arcadia",region:"Cantonese / Dim Sum",province:"Guangdong (Cantonese)",category:"Congee & Noodles",dishes:["Salted Fish Peanut Congee","Wonton Noodle Soup","Peppercorn Chili Oil Wontons"],notes:"Cozy; house-made chili oil a standout",halal:false,lat:34.1388,lng:-118.0347,tags:["noodles"]},
+  {id:55,name:"Harlam's Food Court",city:"Rosemead",region:"Cantonese / Dim Sum",province:"Guangdong (Cantonese)",category:"HK Comfort / Food Stall",dishes:["Zhaliang (Rice Noodle Donut)","Wonton Noodle Soup","Congee"],notes:"Iconic strip-mall food stall; metal lawn chairs unchanged for decades",halal:false,lat:34.0658,lng:-118.0775,tags:["dim-sum"]},
+  {id:56,name:"Savoy Kitchen",city:"Alhambra",region:"Hainan / Southeast Asian-Chinese",province:"Hainan Province / SE Asia",category:"Hainan Chicken Rice",dishes:["Hainan Chicken Rice","Pasta","Southeast Asian Specialties"],notes:"38-year SGV institution; lines never let up; Resy-featured",halal:false,lat:34.0798,lng:-118.1259,tags:["seafood"]},
+];
+
+/* ── Region config ─── */
+const REGIONS = [
+  {key:"Cantonese / Dim Sum",        icon:"🍵", color:"#C85450", province:"Guangdong Province",     desc:"Delicate, fragrant, fresh seafood; yum cha tradition"},
+  {key:"Cantonese Roast & Modern",   icon:"🦆", color:"#C85450", province:"Guangdong Province",     desc:"Roasted meats; char siu, roast duck; soy/hoisin glazes"},
+  {key:"Cantonese Seafood",          icon:"🦞", color:"#C47A30", province:"Guangdong Province",     desc:"Live seafood; wok-fried lobster; black pepper sauces"},
+  {key:"Teochew (Chiu Chow)",        icon:"🍜", color:"#C47A30", province:"Eastern Guangdong",      desc:"Lighter noodles; tangy fish sauce; allium oils"},
+  {key:"Hong Kong Café (Cha Chaan Teng)",icon:"☕", color:"#B8960A",province:"Hong Kong",            desc:"British-Cantonese fusion; milk tea; baked pork chop rice"},
+  {key:"Hong Kong Café / Taiwanese Breakfast",icon:"🥐",color:"#B8960A",province:"Hong Kong / Taiwan",desc:"Breakfast fantuan, soy milk, dumplings to-go"},
+  {key:"Sichuan (Chengdu-style)",    icon:"🌶", color:"#A0303A", province:"Sichuan Province",       desc:"Má là numbing-spicy; peppercorn + dried chiles"},
+  {key:"Sichuan / Chongqing Noodles",icon:"🌶", color:"#A0303A", province:"Sichuan / Chongqing",   desc:"Chewy handmade noodles; spicier Chongqing profile"},
+  {key:"Sichuan / Chongqing-style",  icon:"🌶", color:"#A0303A", province:"Sichuan / Chongqing",   desc:"Extensive Chongqing menu; heavy on fresh chiles"},
+  {key:"Sichuan / Northern Mixed",   icon:"🌶", color:"#A0303A", province:"Sichuan Province",       desc:"Sichuan heat meets northern wheat-based comfort"},
+  {key:"Shanghainese / Jiangnan",    icon:"🥟", color:"#2A6A9A", province:"Shanghai / Jiangsu",    desc:"Rich, slightly sweet; red-braised; XLB soup dumplings"},
+  {key:"Shanghainese / Singaporean", icon:"🥟", color:"#2A6A9A", province:"Shanghai / Singapore",  desc:"XLB + Shanghainese dim sum; rainbow dumplings"},
+  {key:"Shanghainese / Northern Mixed",icon:"🥟",color:"#2A6A9A",province:"Shanghai / N. China",   desc:"Modern Chinese; wagyu burger meets soup dumplings"},
+  {key:"Taiwanese",                  icon:"🍖", color:"#2A8A5A", province:"Taiwan",                desc:"Fujianese roots + Japanese influence; beef noodle soup"},
+  {key:"Taiwanese (Contemporary Fine Dining)",icon:"🌸",color:"#2A8A5A",province:"Taiwan",        desc:"Elevated fine-dining tasting menus; premium ingredients"},
+  {key:"Taiwanese-American Fusion",  icon:"🌮", color:"#2A8A5A", province:"Taiwan / California",   desc:"Night-market items remixed with California ingredients"},
+  {key:"Beijing Imperial (Qing Dynasty)",icon:"👑",color:"#6A3A9A",province:"Beijing / Imperial Court",desc:"Court cuisine; elaborate preparations; ceremonial"},
+  {key:"Beijing / Northern Chinese", icon:"🦢", color:"#6A3A9A", province:"Beijing",               desc:"Wheat-centric; hand-pulled noodles; Peking Duck"},
+  {key:"Modern Chinese-American / Taiwanese",icon:"✨",color:"#5A5A9A",province:"California / Taiwan",desc:"SGV nostalgia modernized with California ingredients"},
+  {key:"Northern Chinese (Dongbei)", icon:"🥢", color:"#7A4AAA", province:"Northeast China",       desc:"Hearty; large dumplings; braised pork; vinegar-forward"},
+  {key:"Shaanxi (Northwestern Chinese)",icon:"🫓",color:"#C06020",province:"Shaanxi Province",     desc:"Silk Road flavors; rou jia mo; biang biang noodles"},
+  {key:"Xinjiang / Uyghur (Halal)",  icon:"🐑", color:"#4A7A8A", province:"Xinjiang Province",     desc:"Halal; cumin lamb; big plate chicken; laghman noodles"},
+  {key:"Hunan",                      icon:"🐸", color:"#3A7A3A", province:"Hunan Province",        desc:"Dry-spicy; smoked & cured meats; pickled chiles; frog"},
+  {key:"Yunnan (Southwestern Chinese)",icon:"🍄",color:"#207A6A",province:"Yunnan Province",      desc:"Sour + spicy; mushrooms; Southeast Asian influences"},
+  {key:"Hot Pot (Sichuan-style)",    icon:"🫕", color:"#8A2020", province:"Sichuan Province",       desc:"Communal mala broth; premium meats; dipping sauces"},
+  {key:"Hot Pot (Inner Mongolian)",  icon:"🫕", color:"#8A2020", province:"Inner Mongolia",         desc:"Lighter mutton-based broth; lamb-forward; sesame paste"},
+  {key:"Sichuan / High-End Contemporary",icon:"⭐",color:"#8A3030",province:"Sichuan Province",   desc:"Upscale Sichuan; premium ingredients; polished service"},
+  {key:"Hainan / Southeast Asian-Chinese",icon:"🍚",color:"#5A8A30",province:"Hainan / SE Asia",  desc:"Poached chicken rice; Southeast Asian-Chinese crossover"},
+];
+
+const regionMap = {};
+REGIONS.forEach(r => regionMap[r.key] = r);
+
+/* ── State ─── */
+let currentScreen = 'home';
+let screenStack = [];
+let currentRegionKey = null;
+let currentDishFilter = null;
+let currentRestaurant = null;
+let currentMapRests = [];
+let favs = JSON.parse(localStorage.getItem('626eats_favs') || '[]');
+let homePillFilter = 'all';
+let leafletMap = null;
+let leafletMarkers = [];
+
+/* ═══════════════════════════════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════════════════════════════ */
+function showScreen(id, addToStack = true) {
+  const prev = document.querySelector('.screen.active');
+  if (prev && addToStack) {
+    prev.classList.remove('active');
+    prev.classList.add('slide-left');
+    screenStack.push(prev.id);
+    setTimeout(() => prev.classList.remove('slide-left'), 300);
+  } else if (prev) {
+    prev.classList.remove('active');
+  }
+  const next = document.getElementById(id);
+  next.classList.add('active');
+  currentScreen = id;
+  const tabBar = document.getElementById('tab-bar');
+  const hideTab = ['regionscreen','detail','mapscreen'].includes(id);
+  tabBar.style.display = hideTab ? 'none' : 'flex';
+}
+
+function goBack() {
+  if (screenStack.length === 0) return;
+  const prevId = screenStack.pop();
+  const curr = document.getElementById(currentScreen);
+  curr.classList.remove('active');
+  curr.style.transform = 'translateX(32px)';
+  setTimeout(() => { curr.style.transform = ''; }, 300);
+  const prev = document.getElementById(prevId);
+  prev.classList.add('active');
+  currentScreen = prevId;
+  const tabBar = document.getElementById('tab-bar');
+  const hideTab = ['regionscreen','detail','mapscreen'].includes(prevId);
+  tabBar.style.display = hideTab ? 'none' : 'flex';
+  if (leafletMap) { setTimeout(() => leafletMap.invalidateSize(), 100); }
+}
+
+function gotoTab(screenId, btn) {
+  screenStack = [];
+  document.querySelectorAll('.tab-item').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  showScreen(screenId, false);
+  if (screenId === 'favscreen') renderFavs();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   HOME
+═══════════════════════════════════════════════════════════════════ */
+function renderHome() {
+  const grid = document.getElementById('region-grid');
+  grid.innerHTML = '';
+  const q = document.getElementById('home-search').value.toLowerCase();
+  const pill = homePillFilter;
+
+  // figure out which region keys are visible
+  let visibleRests = RESTAURANTS.filter(r => {
+    if (pill === 'halal' && !r.halal) return false;
+    if (pill === 'fav' && !favs.includes(r.id)) return false;
+    if (pill === 'dim-sum' && !r.tags.includes('dim-sum')) return false;
+    if (pill === 'noodles' && !r.tags.includes('noodles')) return false;
+    if (pill === 'hotpot' && !r.tags.includes('hotpot')) return false;
+    if (pill === 'seafood' && !r.tags.includes('seafood')) return false;
+    if (q) {
+      const match = r.name.toLowerCase().includes(q) ||
+                    r.dishes.some(d => d.toLowerCase().includes(q)) ||
+                    r.city.toLowerCase().includes(q) ||
+                    r.region.toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  if (q) {
+    // Show restaurant list directly
+    grid.style.gridTemplateColumns = '1fr';
+    visibleRests.forEach((r, i) => {
+      const card = makeRestCard(r);
+      card.style.animationDelay = (i * 0.04) + 's';
+      grid.appendChild(card);
+    });
+    document.getElementById('region-count').textContent = visibleRests.length + ' results';
+    return;
+  }
+
+  grid.style.gridTemplateColumns = '1fr 1fr';
+
+  const seenRegions = new Set(visibleRests.map(r => r.region));
+  const orderedRegions = REGIONS.filter(r => seenRegions.has(r.key));
+
+  document.getElementById('region-count').textContent = orderedRegions.length + ' styles';
+
+  orderedRegions.forEach((reg, i) => {
+    const count = visibleRests.filter(r => r.region === reg.key).length;
+    const card = document.createElement('div');
+    card.className = 'region-card';
+    card.style.cssText = `--rc-color:${reg.color}; animation-delay:${i * 0.04}s`;
+    card.innerHTML = `
+      <span class="rc-icon">${reg.icon}</span>
+      <div class="rc-name">${reg.key}</div>
+      <div class="rc-province">${reg.province}</div>
+      <div class="rc-count">${count} restaurant${count !== 1 ? 's' : ''}</div>
+    `;
+    card.onclick = () => openRegion(reg.key, visibleRests.filter(r => r.region === reg.key));
+    grid.appendChild(card);
+  });
+}
+
+function filterHome() { renderHome(); }
+
+function setPill(el, val) {
+  document.querySelectorAll('#home-pills .pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  homePillFilter = val;
+  renderHome();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   REGION SCREEN
+═══════════════════════════════════════════════════════════════════ */
+function openRegion(key, rests) {
+  currentRegionKey = key;
+  currentDishFilter = null;
+  const reg = regionMap[key];
+  document.getElementById('region-hdr-title').textContent = reg ? reg.icon + ' ' + key : key;
+  document.getElementById('region-list-title').textContent = 'Restaurants';
+  renderDishChips(rests);
+  renderRegionRests(rests);
+  showScreen('regionscreen');
+}
+
+function renderDishChips(rests) {
+  const allDishes = new Set();
+  rests.forEach(r => r.dishes.forEach(d => allDishes.add(d)));
+  const chips = document.getElementById('dish-chips');
+  chips.innerHTML = '';
+  const all = document.createElement('span');
+  all.className = 'dish-chip active';
+  all.textContent = 'All Dishes';
+  all.onclick = () => { currentDishFilter = null; setDishChip(all); renderRegionRests(getRegionRests()); };
+  chips.appendChild(all);
+  [...allDishes].forEach(dish => {
+    const chip = document.createElement('span');
+    chip.className = 'dish-chip';
+    chip.textContent = dish;
+    chip.onclick = () => { currentDishFilter = dish; setDishChip(chip); renderRegionRests(getRegionRests()); };
+    chips.appendChild(chip);
+  });
+}
+
+function setDishChip(el) {
+  document.querySelectorAll('.dish-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function getRegionRests() {
+  let rests = RESTAURANTS.filter(r => r.region === currentRegionKey);
+  if (homePillFilter === 'halal') rests = rests.filter(r => r.halal);
+  if (homePillFilter === 'fav') rests = rests.filter(r => favs.includes(r.id));
+  return rests;
+}
+
+function renderRegionRests(rests) {
+  let filtered = rests;
+  if (currentDishFilter) filtered = rests.filter(r => r.dishes.includes(currentDishFilter));
+  const list = document.getElementById('region-rest-list');
+  list.innerHTML = '';
+  document.getElementById('region-rest-count').textContent = filtered.length + ' spots';
+  if (filtered.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">🍽</div><div class="empty-title">No matches</div><div class="empty-sub">Try a different dish filter</div></div>`;
+    return;
+  }
+  filtered.forEach((r, i) => {
+    const card = makeRestCard(r);
+    card.style.animationDelay = (i * 0.04) + 's';
+    list.appendChild(card);
+  });
+}
+
+function showMapForRegion() {
+  let rests = getRegionRests();
+  if (currentDishFilter) rests = rests.filter(r => r.dishes.includes(currentDishFilter));
+  openMap(rests, currentRegionKey);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   REST CARDS
+═══════════════════════════════════════════════════════════════════ */
+function makeRestCard(r) {
+  const reg = regionMap[r.region];
+  const color = reg ? reg.color : '#C85450';
+  const isFav = favs.includes(r.id);
+  const card = document.createElement('div');
+  card.className = 'rest-card';
+  card.innerHTML = `
+    <div class="rest-card-accent" style="background:${color}"></div>
+    <div class="rest-card-body">
+      <div style="display:flex;align-items:flex-start;gap:8px">
+        <div style="flex:1">
+          <div class="rest-name">${r.name}${r.halal ? '<span class="halal-badge">🌙 Halal</span>' : ''}</div>
+          <div class="rest-meta">
+            <span>${r.city}</span>
+            <span class="dot">·</span>
+            <span>${r.category}</span>
+          </div>
+        </div>
+        <button class="rest-fav-btn" id="fav-btn-${r.id}" onclick="toggleFav(event,${r.id})">${isFav ? '♥' : '♡'}</button>
+      </div>
+      <div class="rest-region-badge">${r.region}</div>
+      <div class="rest-dishes">${r.dishes.map(d => `<span class="rest-dish-tag">${d}</span>`).join('')}</div>
+      ${r.notes ? `<div class="rest-notes">${r.notes}</div>` : ''}
+    </div>
+  `;
+  card.onclick = (e) => { if (!e.target.closest('.rest-fav-btn')) openDetail(r); };
+  return card;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   DETAIL
+═══════════════════════════════════════════════════════════════════ */
+function openDetail(r) {
+  currentRestaurant = r;
+  const reg = regionMap[r.region];
+  const color = reg ? reg.color : '#C85450';
+  document.getElementById('detail-hdr').textContent = r.name;
+  document.getElementById('detail-name').textContent = r.name;
+  document.getElementById('detail-city').textContent = r.city + (r.halal ? ' · 🌙 Halal' : '');
+  document.getElementById('detail-hero').style.background =
+    `linear-gradient(135deg, ${color}dd, #2C1810)`;
+  document.getElementById('detail-region-dot').style.background = color;
+  document.getElementById('detail-region-text').textContent = r.region;
+  document.getElementById('detail-region-sub').textContent = r.province;
+  const dishList = document.getElementById('detail-dishes');
+  dishList.innerHTML = r.dishes.map((d, i) =>
+    `<div class="detail-dish"><span class="dish-num">${i+1}</span><span class="dish-name">${d}</span></div>`
+  ).join('');
+  const notesSection = document.getElementById('detail-notes-section');
+  if (r.notes) {
+    notesSection.style.display = '';
+    document.getElementById('detail-notes').textContent = r.notes;
+  } else { notesSection.style.display = 'none'; }
+  updateDetailFavBtn();
+  showScreen('detail');
+}
+
+function updateDetailFavBtn() {
+  const btn = document.getElementById('detail-fav-btn');
+  if (currentRestaurant) {
+    const isFav = favs.includes(currentRestaurant.id);
+    btn.textContent = isFav ? '♥ Remove from Favorites' : '♡ Save to Favorites';
+  }
+}
+
+function openInMaps() {
+  if (!currentRestaurant) return;
+  const q = encodeURIComponent(currentRestaurant.name + ' ' + currentRestaurant.city + ' CA');
+  window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank');
+}
+
+function showMapForOne() {
+  if (!currentRestaurant) return;
+  openMap([currentRestaurant], currentRestaurant.name);
+}
+
+function toggleFavDetail() {
+  if (!currentRestaurant) return;
+  toggleFavById(currentRestaurant.id);
+  updateDetailFavBtn();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   FAVORITES
+═══════════════════════════════════════════════════════════════════ */
+function toggleFav(e, id) {
+  e.stopPropagation();
+  toggleFavById(id);
+  const btn = document.getElementById('fav-btn-' + id);
+  if (btn) btn.textContent = favs.includes(id) ? '♥' : '♡';
+}
+
+function toggleFavById(id) {
+  if (favs.includes(id)) {
+    favs = favs.filter(f => f !== id);
+  } else {
+    favs.push(id);
+  }
+  localStorage.setItem('626eats_favs', JSON.stringify(favs));
+  document.querySelectorAll('[id^="fav-btn-"]').forEach(btn => {
+    const bid = parseInt(btn.id.replace('fav-btn-',''));
+    btn.textContent = favs.includes(bid) ? '♥' : '♡';
+  });
+}
+
+function renderFavs() {
+  const list = document.getElementById('fav-list');
+  const noFav = document.getElementById('no-fav');
+  const mapBtn = document.getElementById('fav-map-btn');
+  const favRests = RESTAURANTS.filter(r => favs.includes(r.id));
+  if (favRests.length === 0) {
+    noFav.style.display = 'flex'; list.innerHTML = ''; mapBtn.style.display = 'none';
+    return;
+  }
+  noFav.style.display = 'none';
+  mapBtn.style.display = 'flex';
+  list.innerHTML = '';
+  favRests.forEach((r, i) => {
+    const card = makeRestCard(r);
+    card.style.animationDelay = (i * 0.04) + 's';
+    list.appendChild(card);
+  });
+}
+
+function showMapForFavs() {
+  const favRests = RESTAURANTS.filter(r => favs.includes(r.id));
+  openMap(favRests, 'Saved Spots');
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   MAP
+═══════════════════════════════════════════════════════════════════ */
+function openMap(rests, title) {
+  currentMapRests = rests;
+  document.getElementById('map-hdr-title').textContent = title;
+  document.getElementById('map-sheet-title').textContent = rests.length + ' locations';
+  showScreen('mapscreen');
+  setTimeout(() => initMap(rests), 120);
+  renderMapSheet(rests);
+}
+
+function initMap(rests) {
+  const mapEl = document.getElementById('map');
+  if (!leafletMap) {
+    leafletMap = L.map('map', { zoomControl: false }).setView([34.08, -118.11], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO',
+      maxZoom: 19
+    }).addTo(leafletMap);
+    L.control.zoom({ position: 'topright' }).addTo(leafletMap);
+  }
+  leafletMarkers.forEach(m => m.remove());
+  leafletMarkers = [];
+
+  const bounds = [];
+  rests.forEach(r => {
+    if (!r.lat) return;
+    const reg = regionMap[r.region];
+    const color = reg ? reg.color : '#C85450';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="
+        width:32px;height:32px;
+        background:${color};
+        border-radius:50% 50% 50% 0;
+        transform:rotate(-45deg);
+        border:2.5px solid white;
+        box-shadow:0 2px 10px rgba(0,0,0,0.3);
+        display:flex;align-items:center;justify-content:center;
+      "><span style="transform:rotate(45deg);font-size:13px">${reg ? reg.icon : '🍽'}</span></div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -34],
+    });
+    const q = encodeURIComponent(r.name + ' ' + r.city + ' CA');
+    const popup = L.popup({ maxWidth: 240 }).setContent(`
+      <div class="popup-name">${r.name}${r.halal ? ' <span class="halal-badge">🌙 Halal</span>' : ''}</div>
+      <div class="popup-city">${r.city} · ${r.region}</div>
+      <div class="popup-dishes">${r.dishes.map(d => `<span class="popup-dish">${d}</span>`).join('')}</div>
+      <a class="popup-link" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank">🗺 Open in Google Maps</a>
+    `);
+    const marker = L.marker([r.lat, r.lng], { icon }).bindPopup(popup).addTo(leafletMap);
+    leafletMarkers.push(marker);
+    bounds.push([r.lat, r.lng]);
+  });
+
+  if (bounds.length > 0) {
+    if (bounds.length === 1) {
+      leafletMap.setView(bounds[0], 15);
+    } else {
+      leafletMap.fitBounds(bounds, { padding: [40, 40] });
+    }
+  }
+  leafletMap.invalidateSize();
+}
+
+function renderMapSheet(rests) {
+  const list = document.getElementById('map-sheet-list');
+  list.innerHTML = '';
+  rests.forEach(r => {
+    const reg = regionMap[r.region];
+    const color = reg ? reg.color : '#C85450';
+    const row = document.createElement('div');
+    row.className = 'map-rest-row';
+    row.innerHTML = `
+      <div class="map-rest-dot" style="background:${color}"></div>
+      <div style="flex:1">
+        <div class="map-rest-name">${r.name}</div>
+        <div class="map-rest-city">${r.city}</div>
+      </div>
+      <div style="font-size:12px;color:var(--ink-muted)">${reg ? reg.icon : ''}</div>
+    `;
+    row.onclick = () => {
+      const idx = leafletMarkers.findIndex((_, i) => currentMapRests[i] && currentMapRests[i].id === r.id);
+      if (idx >= 0) {
+        leafletMap.setView([r.lat, r.lng], 16);
+        leafletMarkers[idx].openPopup();
+      }
+    };
+    list.appendChild(row);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SURPRISE
+═══════════════════════════════════════════════════════════════════ */
+let surpriseRest = null;
+function openSurprise() {
+  const eligible = RESTAURANTS.filter(r => r.lat);
+  const r = eligible[Math.floor(Math.random() * eligible.length)];
+  surpriseRest = r;
+  document.getElementById('modal-name').textContent = r.name;
+  document.getElementById('modal-meta').textContent = r.city + ' · ' + r.region;
+  document.getElementById('modal-dishes').innerHTML = r.dishes.map(d =>
+    `<span class="modal-dish">${d}</span>`).join('');
+  const q = encodeURIComponent(r.name + ' ' + r.city + ' CA');
+  document.getElementById('modal-maps-btn').onclick = () =>
+    window.open(`https://www.google.com/maps/search/?api=1&query=${q}`, '_blank');
+  document.getElementById('modal-detail-btn').onclick = () => {
+    closeSurprise();
+    setTimeout(() => openDetail(r), 200);
+  };
+  document.getElementById('surprise-modal').classList.add('open');
+}
+
+function closeSurprise(e) {
+  if (!e || e.target === document.getElementById('surprise-modal')) {
+    document.getElementById('surprise-modal').classList.remove('open');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════════ */
+renderHome();
+</script>
+
+<!-- ══ SPLASH SCREEN ════════════════════════════════════════════════ -->
+<style>
+#splash {
+  position:fixed;inset:0;z-index:9999;
+  background:#6B1E0F;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:opacity 0.5s ease;
+}
+#splash.hidden{opacity:0;pointer-events:none;}
+.splash-icon{
+  width:96px;height:96px;border-radius:22px;
+  box-shadow:0 8px 40px rgba(0,0,0,0.4);margin-bottom:20px;
+  animation:splashPop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes splashPop{from{transform:scale(0.6);opacity:0;}to{transform:scale(1);opacity:1;}}
+.splash-name{
+  font-family:'Playfair Display',serif;
+  font-size:36px;font-weight:900;color:#FDF8F2;
+  animation:splashFade 0.5s 0.25s ease both;
+}
+.splash-name em{color:#C9963A;font-style:normal;}
+.splash-sub{
+  font-family:'DM Sans',sans-serif;
+  font-size:13px;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(253,248,242,0.5);margin-top:6px;
+  animation:splashFade 0.5s 0.4s ease both;
+}
+.splash-dots{display:flex;gap:6px;margin-top:40px;animation:splashFade 0.5s 0.5s ease both;}
+.splash-dot{
+  width:6px;height:6px;border-radius:50%;background:rgba(253,248,242,0.3);
+  animation:dotPulse 1.2s 0.6s ease-in-out infinite;
+}
+.splash-dot:nth-child(2){animation-delay:0.75s;}
+.splash-dot:nth-child(3){animation-delay:0.9s;}
+@keyframes splashFade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+@keyframes dotPulse{0%,100%{background:rgba(253,248,242,0.3);transform:scale(1);}50%{background:#C9963A;transform:scale(1.3);}}
+
+/* iOS install hint */
+#ios-hint{
+  position:fixed;bottom:calc(env(safe-area-inset-bottom,0px) + 84px);
+  left:16px;right:16px;
+  background:#2C1810;border:1px solid rgba(201,150,58,0.35);
+  border-radius:16px;padding:14px 16px;
+  display:flex;align-items:center;gap:12px;z-index:500;
+  box-shadow:0 8px 32px rgba(0,0,0,0.35);
+  font-family:'DM Sans',sans-serif;
+  opacity:0;transform:translateY(12px);
+  transition:opacity 0.35s ease,transform 0.35s ease;
+  pointer-events:none;
+}
+#ios-hint.show{opacity:1;transform:translateY(0);pointer-events:all;}
+#ios-hint .hint-icon{font-size:26px;flex-shrink:0;}
+#ios-hint .hint-text{flex:1;}
+#ios-hint .hint-title{color:#FDF8F2;font-size:13px;font-weight:600;}
+#ios-hint .hint-sub{color:rgba(253,248,242,0.55);font-size:11px;margin-top:2px;}
+#ios-hint .hint-close{background:none;border:none;color:rgba(253,248,242,0.4);font-size:20px;cursor:pointer;padding:4px;}
+</style>
+
+<div id="splash">
+  <img class="splash-icon" src="data:image/png;base64,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" alt="626 Eats">
+  <div class="splash-name"><em>626</em> Eats</div>
+  <div class="splash-sub">SGV Food Guide</div>
+  <div class="splash-dots">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+</div>
+
+<div id="ios-hint">
+  <div class="hint-icon">📲</div>
+  <div class="hint-text">
+    <div class="hint-title">Install 626 Eats</div>
+    <div class="hint-sub">Tap <strong style="color:#C9963A">Share &#x2191;</strong> then <strong style="color:#C9963A">Add to Home Screen</strong></div>
+  </div>
+  <button class="hint-close" id="hint-close-btn">&#x00D7;</button>
+</div>
+
+<script>
+(function() {
+  /* ── Splash dismiss ── */
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      var splash = document.getElementById('splash');
+      if (splash) {
+        splash.classList.add('hidden');
+        setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 500);
+      }
+    }, 1600);
+  });
+
+  /* ── Service Worker (blob so it works from any origin) ── */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      var swCode = [
+        "const CACHE='626eats-v2';",
+        "const URLS=['https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap','https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css','https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'];",
+        "self.addEventListener('install',function(e){e.waitUntil(caches.open(CACHE).then(function(c){return c.addAll(URLS).catch(function(){});}).catch(function(){}));self.skipWaiting();});",
+        "self.addEventListener('activate',function(e){e.waitUntil(caches.keys().then(function(ks){return Promise.all(ks.filter(function(k){return k!==CACHE;}).map(function(k){return caches.delete(k);}));}));self.clients.claim();});",
+        "self.addEventListener('fetch',function(e){e.respondWith(caches.match(e.request).then(function(hit){if(hit)return hit;return fetch(e.request).then(function(r){if(!r||r.status!==200||r.type==='opaque')return r;var c=r.clone();caches.open(CACHE).then(function(cache){cache.put(e.request,c);});return r;}).catch(function(){return new Response('',{status:503});});}));});"
+      ].join('\n');
+      try {
+        var blob = new Blob([swCode], {type: 'application/javascript'});
+        var swUrl = URL.createObjectURL(blob);
+        navigator.serviceWorker.register(swUrl).catch(function(e) {
+          console.log('SW registration failed (normal on file://):', e);
+        });
+      } catch(e) {
+        console.log('SW blob failed:', e);
+      }
+    });
+  }
+
+  /* ── iOS install hint ── */
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  var isStandalone = window.navigator.standalone === true;
+  if (isIOS && !isStandalone && !localStorage.getItem('626_ios_hint_v2')) {
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        var hint = document.getElementById('ios-hint');
+        if (hint) {
+          hint.classList.add('show');
+          setTimeout(function() {
+            hint.classList.remove('show');
+          }, 8000);
+        }
+      }, 2500);
+      localStorage.setItem('626_ios_hint_v2', '1');
+    });
+  }
+
+  /* ── iOS hint close button ── */
+  document.addEventListener('DOMContentLoaded', function() {
+    var closeBtn = document.getElementById('hint-close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function() {
+        var hint = document.getElementById('ios-hint');
+        if (hint) hint.classList.remove('show');
+      });
+    }
+  });
+
+})();
+</script>
+
+</body>
+</html>
