@@ -62,11 +62,22 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 .hdr-btn:active{background:rgba(253,248,242,0.2)}
 .hdr-btn.accent{background:var(--gold);border-color:var(--gold);color:var(--ink);font-weight:600}
 
+/* ── HOME STICKY BAR ── */
+.home-sticky{flex-shrink:0;background:var(--red-dark);padding-top:var(--safe-top);
+  position:relative;z-index:20;transition:box-shadow .2s}
+.home-sticky.scrolled{box-shadow:0 2px 16px rgba(28,10,4,0.4)}
+.home-sticky-inner{display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px 0;gap:12px}
+.home-sticky-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;
+  color:var(--cream);opacity:0;transform:translateY(5px);
+  transition:opacity .22s ease,transform .22s ease;flex:1}
+.home-sticky-title.visible{opacity:1;transform:translateY(0)}
+.home-sticky-title small{display:block;font-family:'DM Sans',sans-serif;font-size:10px;
+  font-weight:400;letter-spacing:2.5px;text-transform:uppercase;
+  color:rgba(253,248,242,0.48);margin-top:1px}
 /* ── HERO ── */
-.hero{background:var(--red-dark);padding:calc(var(--safe-top) + 70px) 22px 32px;
-  position:relative;overflow:hidden;flex-shrink:0}
-.hero-abs-hdr{position:absolute;top:0;left:0;right:0;z-index:20;
-  padding:calc(var(--safe-top) + 14px) 18px 14px;display:flex;align-items:center;gap:12px}
+.hero{background:var(--red-dark);padding:28px 22px 36px;
+  position:relative;overflow:hidden}
 .hero::before{content:'粵 川 滬 台 陝 新 湘 滇 黔 閩';position:absolute;
   bottom:-8px;left:-8px;font-size:90px;opacity:.04;color:var(--gold);
   letter-spacing:10px;white-space:nowrap;pointer-events:none;overflow:hidden;line-height:1}
@@ -379,7 +390,10 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .anim{animation:fadeUp .3s ease both}
 
-/* ── MISC ── */
+/* ── HOME SCROLL OUTER ── */
+#home-scroll-outer{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#home-scroll-outer::-webkit-scrollbar{display:none}
+
 .divider{height:1px;background:var(--border);margin:0 16px}
 .spacer-bot{height:110px}
 </style>
@@ -408,33 +422,39 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 
 <!-- HOME -->
 <div class="screen active" id="s-home">
-  <div style="flex-shrink:0;position:relative">
-    <div class="hero">
-      <div class="hero-abs-hdr">
-        <div class="hdr-title" style="color:var(--cream)">626 Eats<small>SGV Food Guide</small></div>
-        <div class="hdr-actions">
-          <button class="hdr-btn accent" onclick="openSurprise()">🎲 Surprise</button>
-        </div>
+
+  <!-- Sticky top bar: always visible, fades in app name on scroll -->
+  <div class="home-sticky" id="home-sticky">
+    <div class="home-sticky-inner">
+      <div class="home-sticky-title" id="home-sticky-title">626 Eats</div>
+      <button class="hdr-btn accent" onclick="openSurprise()" style="flex-shrink:0">🎲 Surprise</button>
+    </div>
+    <div class="search-wrap" style="padding:0 16px 0;margin-top:8px">
+      <div class="search-box">
+        <span class="si">🔍</span>
+        <input type="search" id="home-q" placeholder="Search restaurants or dishes…" oninput="renderHome()" autocomplete="off" autocorrect="off">
+        <button class="search-clear" id="search-clear-btn" onclick="clearSearch()">&#215;</button>
       </div>
-      <div style="height:58px"></div>
+    </div>
+    <div class="browse-toggle" style="margin:10px 16px 0">
+      <button class="toggle-btn active" id="tb-region" onclick="setMode('region')">By Region</button>
+      <button class="toggle-btn" id="tb-dish" onclick="setMode('dish')">By Dish</button>
+    </div>
+    <div id="home-filter-row" class="filter-row" style="padding-top:10px"></div>
+  </div>
+
+  <!-- Scrollable content including hero -->
+  <div class="scroll" id="home-scroll-outer" onscroll="onHomeScroll(this)">
+    <!-- Hero scrolls with content -->
+    <div class="hero" id="home-hero">
       <div class="hero-eyebrow">San Gabriel Valley · The 626</div>
       <div class="hero-title"><em>60+</em> restaurants<br>22 culinary traditions</div>
       <div class="hero-sub">From Qing Dynasty imperial courts to Uyghur Silk Road kitchens — the most diverse Chinese food scene in America.</div>
     </div>
+    <!-- Content rendered here -->
+    <div id="home-scroll"></div>
   </div>
-  <div class="search-wrap" style="flex-shrink:0">
-    <div class="search-box">
-      <span class="si">🔍</span>
-      <input type="search" id="home-q" placeholder="Search restaurants or dishes…" oninput="renderHome()" autocomplete="off" autocorrect="off">
-      <button class="search-clear" id="search-clear-btn" onclick="clearSearch()">&#215;</button>
-    </div>
-  </div>
-  <div class="browse-toggle" style="flex-shrink:0">
-    <button class="toggle-btn active" id="tb-region" onclick="setMode('region')">By Region</button>
-    <button class="toggle-btn" id="tb-dish" onclick="setMode('dish')">By Dish</button>
-  </div>
-  <div id="home-filter-row" class="filter-row" style="flex-shrink:0"></div>
-  <div class="scroll" id="home-scroll"></div>
+
 </div>
 
 <!-- REGION SCREEN -->
@@ -1044,6 +1064,15 @@ function setMode(m){
   renderHome();
 }
 
+function onHomeScroll(el){
+  var sticky = document.getElementById('home-sticky');
+  var title = document.getElementById('home-sticky-title');
+  var heroH = document.getElementById('home-hero').offsetHeight;
+  var scrolled = el.scrollTop > heroH - 20;
+  sticky.classList.toggle('scrolled', scrolled);
+  title.classList.toggle('visible', scrolled);
+}
+
 function clearSearch(){
   document.getElementById('home-q').value = '';
   document.getElementById('search-clear-btn').classList.remove('visible');
@@ -1058,6 +1087,7 @@ function renderHome(){
   scroll.innerHTML = '';
   if(browseMode === 'region') renderRegionMode(scroll, q);
   else renderDishMode(scroll, q);
+  // Reset outer scroll to top when content changes via toggle/filter
 }
 
 function renderRegionMode(el, q){

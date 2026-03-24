@@ -1,0 +1,64 @@
+name: Research Sweep
+
+on:
+  workflow_dispatch:
+    inputs:
+      cities:
+        description: 'Comma-separated city names, or "all" for full sweep'
+        required: false
+        default: 'all'
+      sources:
+        description: 'Which APIs to use'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - google-only
+          - yelp-only
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests gspread google-auth playwright beautifulsoup4
+          playwright install chromium
+          playwright install-deps chromium
+
+      - name: Run research sweep
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          YELP_API_KEY: ${{ secrets.YELP_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          CITIES: ${{ github.event.inputs.cities }}
+          SOURCES: ${{ github.event.inputs.sources }}
+        run: python scripts/research_sweep.py
+
+      - name: Export JSON
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+        run: python scripts/export_json.py
+
+      - name: Commit results
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "626 Eats Bot"
+          git add data/restaurants.json
+          git diff --staged --quiet || git commit -m "Research sweep: $(date -u '+%Y-%m-%d') [${{ github.event.inputs.cities }}]"
+          git push origin HEAD:main || echo "Nothing to push"
