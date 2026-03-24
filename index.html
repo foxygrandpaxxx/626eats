@@ -1068,15 +1068,78 @@ function openRestDetail(r){
 
   var dr = document.getElementById('rest-dishes');
   dr.innerHTML = '';
-  r.dishes.forEach(function(d,i){
-    var isBest = r.best && r.best.indexOf(d)>=0;
-    var row = document.createElement('div'); row.className='dish-row';
-    var num = document.createElement('div'); num.className='dish-row-num'; num.textContent=(i+1);
-    var nm = document.createElement('div'); nm.className='dish-row-name'; nm.textContent=d;
-    row.appendChild(num); row.appendChild(nm);
-    if(isBest){ var b=document.createElement('div'); b.className='dish-row-best'; b.textContent='🏆 Best'; row.appendChild(b); }
-    dr.appendChild(row);
-  });
+
+  // Priority: reviewDishes (real review data) > dishDetails > plain dish names
+  var dishSource = [];
+  if(r.reviewDishes && r.reviewDishes.length) {
+    dishSource = r.reviewDishes.map(function(d) {
+      return { name: d.name, category: d.category, summary: d.summary, isBest: false };
+    });
+  } else if(r.dishDetails && r.dishDetails.length) {
+    dishSource = r.dishDetails.map(function(d) {
+      return { name: d.name || d.dishId, category: d.formatGroup || '', summary: d.reviewSummary || d.note || '', isBest: d.isBest || false };
+    });
+  } else if(r.dishes && r.dishes.length) {
+    dishSource = r.dishes.map(function(d) {
+      return { name: d, category: '', summary: '', isBest: r.best && r.best.indexOf(d) >= 0 };
+    });
+  }
+
+  if(!dishSource.length){
+    dr.appendChild(makeEmpty('🍽','No dishes yet','Add dishes manually or run enrich_dishes.py'));
+  } else {
+    dishSource.forEach(function(d, i){
+      var row = document.createElement('div');
+      row.className = 'dish-row';
+      row.style.cssText = 'flex-direction:column;align-items:flex-start;gap:6px';
+
+      // Top line: number + name + category chip
+      var topLine = document.createElement('div');
+      topLine.style.cssText = 'display:flex;align-items:center;gap:10px;width:100%';
+
+      var num = document.createElement('div');
+      num.className   = 'dish-row-num';
+      num.textContent = (i + 1);
+
+      var nm = document.createElement('div');
+      nm.className    = 'dish-row-name';
+      nm.style.flex   = '1';
+      nm.textContent  = d.name;
+
+      topLine.appendChild(num);
+      topLine.appendChild(nm);
+
+      if(d.isBest){
+        var b = document.createElement('div');
+        b.className   = 'dish-row-best';
+        b.textContent = '🏆 Best';
+        topLine.appendChild(b);
+      }
+
+      if(d.category){
+        var chip = document.createElement('span');
+        chip.style.cssText = 'font-size:10px;font-weight:600;letter-spacing:1.5px;'
+          + 'text-transform:uppercase;color:var(--ink-muted);'
+          + 'background:var(--bg2);border-radius:5px;padding:2px 7px;'
+          + 'border:1px solid var(--border);flex-shrink:0;white-space:nowrap';
+        chip.textContent = d.category;
+        topLine.appendChild(chip);
+      }
+
+      row.appendChild(topLine);
+
+      // Review summary — what real customers say about this dish here
+      if(d.summary){
+        var sv = document.createElement('div');
+        sv.style.cssText = 'font-size:12px;color:var(--ink-soft);font-style:italic;'
+          + 'line-height:1.6;padding-left:32px;padding-right:4px';
+        sv.textContent = '“' + d.summary + '”';
+        row.appendChild(sv);
+      }
+
+      dr.appendChild(row);
+    });
+  }
 
   var ns = document.getElementById('rest-notes-sec');
   if(r.notes){ ns.style.display=''; document.getElementById('rest-notes').textContent=r.notes; }
@@ -1425,21 +1488,33 @@ window.addEventListener('load', function(){
       yelpId: r.yelpId || r.yelp_id || '',
       yelp_rating: r.yelpRating || r.yelp_rating || null,
       yelp_count:  r.yelpReviewCount || r.yelp_review_count || null,
-      sources: r.sources || []
+      sources:      r.sources || [],
+      reviewDishes: r.reviewDishes || []  // from Google reviews + Claude
     };
   }
 
   function mapDish(d) {
+    // Map icon based on format group
+    var fmtIcons = {
+      'Noodles':'🍜','Dumplings':'🥟','Dim Sum Plates':'🍵',
+      'Roasts & BBQ':'🍖','Rice Dishes':'🍚','Soups':'🥣',
+      'Meat Dishes':'🥩','Small Plates & Cold':'🥗',
+      'Hot Pot':'🫕','Pastry & Bread':'🥐','Other':'🍽'
+    };
+    var fmt = d.format || d.formatGroup || d.format_group || d.fmt || 'Other';
     return {
-      id:    d.id || d.dish_id || '',
-      name:  d.name || d.name_en || '',
-      zh:    d.nameChinese || d.name_zh || '',
-      fmt:   d.formatGroup || d.format_group || d.fmt || 'Other',
-      origin:d.origin || '',
-      desc:  d.description || d.desc || '',
-      tags:  d.flavorTags || d.flavor_tags || d.tags || [],
-      best:  d.bestInSgv || d.best_in_sgv || d.best || '',
-      rests: d.restaurants || d.rests || []
+      id:     d.id || d.dish_id || '',
+      name:   d.name || d.name_en || '',
+      zh:     d.chinese || d.nameChinese || d.name_zh || '',
+      fmt:    fmt,
+      icon:   fmtIcons[fmt] || '🍽',
+      region: d.region || '',
+      origin: d.origin || '',
+      desc:   d.description || d.desc || '',
+      flavors: d.flavors || d.flavorTags || d.flavor_tags || [],
+      bestIn: d.bestIn || d.best_in_sgv || '',
+      bestSrc:d.bestSrc || d.best_src || '',
+      rests:  d.restaurants || d.rests || []
     };
   }
 
