@@ -396,9 +396,38 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 
 .divider{height:1px;background:var(--border);margin:0 16px}
 .spacer-bot{height:110px}
+
+/* ── Loading overlay ── */
+#loading-overlay {
+  position:fixed;top:0;left:0;right:0;bottom:0;
+  background:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:9999;
+  transition:opacity 0.4s;
+}
+#loading-overlay.hidden { opacity:0; pointer-events:none; }
+.spinner {
+  width:48px;height:48px;
+  border:4px solid #f0f0f0;
+  border-top:4px solid #c0392b;
+  border-radius:50%;
+  animation:spin 0.8s linear infinite;
+  margin-bottom:16px;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+#loading-overlay p {
+  font-family:Arial,sans-serif;
+  font-size:14px;color:#888;margin:0;
+}
+
 </style>
 </head>
 <body>
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <p>Loading restaurants…</p>
+</div>
+
 
 <!-- SPLASH -->
 <div id="splash">
@@ -674,319 +703,12 @@ var RMap = {};
 REGIONS.forEach(function(r){RMap[r.key]=r;});
 
 // ═══════════════════════════════════════════════════
-// DATA — DISHES
-// ═══════════════════════════════════════════════════
-var DISHES = [
-  // NOODLES
-  {id:'n1',name:'Dan Dan Noodles',zh:'担担面',icon:'🍜',fmt:'Noodles',region:'Sichuan',
-   origin:'Chengdu, Sichuan Province',flavors:['Spicy','Nutty','Umami'],
-   desc:'Street noodles named for the pole (dan) vendors carried them on. Thin wheat noodles in a sauce of chili oil, sesame paste, preserved vegetables, and minced pork. The defining Sichuan noodle dish — simultaneously spicy, nutty, and aromatic.',
-   bestIn:'Chengdu Taste',bestSrc:'Infatuation',
-   rests:[{id:18,note:'Considered the definitive SGV version',best:true},{id:19,note:'Fragrant, lighter Chengdu style'},{id:20,note:'Mian house specialty'}]},
-  {id:'n2',name:'Beef Noodle Soup',zh:'牛肉麵',icon:'🍜',fmt:'Noodles',region:'Taiwanese',
-   origin:'Taiwan (Shandong diaspora roots)',flavors:['Rich','Warming','Umami'],
-   desc:'Taiwan\'s national dish — thick wheat noodles in deeply braised beef shank broth seasoned with soy, bean paste, and star anise. Every Taiwanese restaurant guards its broth recipe closely. Dai Ho\'s sells out daily before 2pm.',
-   bestIn:"Dai Ho Restaurant",bestSrc:'Infatuation & Resy',
-   rests:[{id:29,note:'Legendary spicy version — lunch only, sells out',best:true}]},
-  {id:'n3',name:'Biang Biang Noodles',zh:'biangbiang面',icon:'🍜',fmt:'Noodles',region:'Northwestern',
-   origin:"Xi'an, Shaanxi Province",flavors:['Chewy','Savory','Spicy'],
-   desc:"Wide, hand-torn belt noodles from Xi'an — named with China's most stroke-complex character (58 strokes). The dough is slapped against the board making a \"biang biang\" sound. Dressed with chili oil, garlic, and vinegar.",
-   bestIn:'Shaanxi Garden',bestSrc:'Matador Network & LAist',
-   rests:[{id:41,note:"Authentic Xi'an preparation",best:true},{id:42,note:'In-kitchen hand-pulled version'}]},
-  {id:'n4',name:'Laghman Noodles',zh:'拉条子',icon:'🍜',fmt:'Noodles',region:'Northwestern',
-   origin:'Xinjiang Province / Central Asia',flavors:['Savory','Aromatic','Spicy'],
-   desc:"Uyghur hand-pulled noodles — thicker and chewier than their Chinese cousins, stir-fried with lamb, bell peppers, tomatoes, and cumin. Central Asian in spirit, reflecting Xinjiang's position on the ancient Silk Road.",
-   bestIn:"Dolan's",bestSrc:'Infatuation',
-   rests:[{id:44,note:'Best Uyghur noodles in the SGV',best:true},{id:43,note:"Omar's classic preparation"}]},
-  {id:'n5',name:'Chongqing Noodles',zh:'重庆小面',icon:'🍜',fmt:'Noodles',region:'Sichuan',
-   origin:'Chongqing Municipality',flavors:['Spicy','Tingly','Pungent'],
-   desc:'Morning noodles from Chongqing — thin wheat noodles in a fiery broth with dried chiles, Sichuan peppercorn, pork mince, and pickled vegetables. Spicier and more pungent than Chengdu-style dan dan. Chongqing\'s greatest street food export.',
-   bestIn:'Mian',bestSrc:'Infatuation',
-   rests:[{id:20,note:'Mian flagship dish',best:true},{id:21,note:'Spicy City Chongqing-style'}]},
-  {id:'n6',name:"Wife's Special Noodles",zh:'老婆面',icon:'🍜',fmt:'Noodles',region:'Northern Chinese',
-   origin:'Northern China (Dongbei)',flavors:['Savory','Complex','Comforting'],
-   desc:"A Northern Cafe signature — rolled noodles arriving with three distinct toppings: tomato and egg, fried pork, and jajangmyeon-like minced black bean stew. One of the SGV's most uniquely constructed noodle dishes.",
-   bestIn:'Northern Cafe',bestSrc:'Infatuation',
-   rests:[{id:37,note:'Signature house dish — unlike anything else in SGV',best:true}]},
-  {id:'n7',name:'Teochew Noodle Soup',zh:'潮州汤粉',icon:'🍜',fmt:'Noodles',region:'Teochew',
-   origin:'Chaozhou, Eastern Guangdong',flavors:['Light','Umami','Fragrant'],
-   desc:"Delicate rice or wheat noodles in a clean, allium-oil-fragrant broth with shrimp, beef, and bean sprouts. The condiment array — fish sauce, chili, vinegar — reflects Teochew's deep Southeast Asian diaspora heritage.",
-   bestIn:'Kim Kee Noodle House',bestSrc:'Edible LA',
-   rests:[{id:13,note:'SGV Teochew institution since the 1970s',best:true}]},
-  {id:'n8',name:'Beef Roll (Niu Rou Juan Bing)',zh:'牛肉卷饼',icon:'🌯',fmt:'Noodles',region:'Northern Chinese',
-   origin:'Beijing / Northern China (SGV evolution)',flavors:['Savory','Crispy','Herbal'],
-   desc:'A Northern Chinese pancake rolled around soy-braised beef, scallions, and sweet hoisin. The 101 Noodle Express version became a defining SGV dish — a California evolution of Beijing street food that launched a chain.',
-   bestIn:'101 Noodle Express',bestSrc:'Matador Network',
-   rests:[{id:35,note:'The original SGV beef roll — started a trend',best:true}]},
-  {id:'n9',name:'Scallion Oil Noodles',zh:'葱油拌面',icon:'🍜',fmt:'Noodles',region:'Shanghainese',
-   origin:'Shanghai',flavors:['Umami','Rich','Fragrant'],
-   desc:'One of Shanghai\'s simplest and most beloved dishes — wheat noodles dressed with deeply caramelized scallion oil, soy sauce, and a touch of sugar. The slow-cooked scallions impart extraordinary depth.',
-   rests:[{id:28,note:"No. 8 on the Bund specialty"},{id:25,note:'Auntie Qiu house staple'}]},
-  // DUMPLINGS
-  {id:'d1',name:'Xiao Long Bao',zh:'小笼包',icon:'🥟',fmt:'Dumplings',region:'Shanghainese',
-   origin:'Shanghai / Jiangsu Province',flavors:['Juicy','Rich','Umami'],
-   desc:"Thin-skinned steamed dumplings filled with pork and a pocket of hot broth — formed by wrapping solid meat gelatin that liquefies when steamed. The SGV's most debated dish: Din Tai Fung vs. the local contenders.",
-   bestIn:'Din Tai Fung',bestSrc:'Infatuation',
-   rests:[{id:23,note:'Gold standard; flagship SGV location',best:true},{id:26,note:'Good Alley thin-skinned version'},{id:40,note:'Prince Dumpling broth-locked version'}]},
-  {id:'d2',name:'Har Gow (Crystal Shrimp Dumplings)',zh:'虾饺',icon:'🥟',fmt:'Dumplings',region:'Cantonese',
-   origin:'Guangdong Province',flavors:['Delicate','Sweet','Fresh'],
-   desc:"The benchmark of a dim sum kitchen's skill. Translucent rice-flour wrappers encasing whole shrimp — the skin must be thin enough to show the pink shrimp through it yet strong enough not to tear when lifted.",
-   bestIn:'Sea Harbour Seafood',bestSrc:'Infatuation',
-   rests:[{id:1,note:'SGV gold standard for 20+ years',best:true},{id:2,note:'Lunasia excellent version'},{id:4,note:'NBC Seafood classic cart'}]},
-  {id:'d3',name:'Truffle Siu Mai',zh:'松露烧卖',icon:'🥟',fmt:'Dumplings',region:'Cantonese',
-   origin:'Guangdong Province (SGV innovation)',flavors:['Savory','Umami','Earthy'],
-   desc:"Open-topped steamed pork and shrimp dumplings topped with shaved black truffle. Sea Harbour's version became one of the most celebrated dim sum innovations in LA — a Cantonese classic elevated by luxury ingredients.",
-   bestIn:'Sea Harbour Seafood',bestSrc:'Infatuation',
-   rests:[{id:1,note:'The original SGV truffle siu mai',best:true},{id:3,note:"Chef Tony's version — almost as good"}]},
-  {id:'d4',name:'Hui Tou Potstickers',zh:'盒子',icon:'🥟',fmt:'Dumplings',region:'Northern Chinese',
-   origin:'Northern China',flavors:['Crispy','Juicy','Savory'],
-   desc:"Hui Tou Xiang's oblong house potstickers — pan-fried on all sides to a juicy crisp rather than the standard flat-bottomed style. A proprietary SGV adaptation with a dramatically different texture than any other dumpling in the valley.",
-   bestIn:'Hui Tou Xiang',bestSrc:'Infatuation',
-   rests:[{id:39,note:'House specialty — unlike any other potsticker in SGV',best:true}]},
-  {id:'d5',name:'Sheng Jian Bao',zh:'生煎包',icon:'🥟',fmt:'Dumplings',region:'Shanghainese',
-   origin:'Shanghai',flavors:['Crispy','Juicy','Savory'],
-   desc:"Shanghai's beloved pan-fried pork bun — a thick-skinned pork-and-gelatin dumpling fried until the bottom turns dark and crispy, then steamed until the top is soft. Sesame seeds on top. The street-food cousin of xiao long bao.",
-   rests:[{id:25,note:'Auntie Qiu specialty'},{id:24,note:'Jiang Nan Spring version'}]},
-  {id:'d6',name:'Rainbow Xiao Long Bao',zh:'彩虹小笼包',icon:'🌈',fmt:'Dumplings',region:'Shanghainese',
-   origin:'Singapore / Shanghai',flavors:['Umami','Novel','Juicy'],
-   desc:"Paradise Dynasty's viral signature — eight soup dumplings each dyed and flavored differently: black truffle, foie gras, crab roe, garlic, cheese, Sichuan, original, and ginseng. A spectacle that became an SGV phenomenon.",
-   bestIn:'Paradise Dynasty',bestSrc:'OpenTable',
-   rests:[{id:27,note:'Exclusive to Paradise Dynasty',best:true}]},
-  {id:'d7',name:'Guotie (Pan-Fried Dumplings)',zh:'锅贴',icon:'🥟',fmt:'Dumplings',region:'Northern Chinese',
-   origin:'Northern China',flavors:['Crispy','Juicy','Savory'],
-   desc:'Northern Chinese flat-bottomed pan-fried dumplings — steamed and fried simultaneously to create a crispy bottom and tender pleated top. A northern street-food staple and the ancestor of Japanese gyoza.',
-   rests:[{id:38,note:"Mama Lu's jumbo-sized version"},{id:35,note:'101 Noodle Express version'}]},
-  // DIM SUM PLATES
-  {id:'ds1',name:'Cheung Fun (Rice Noodle Rolls)',zh:'肠粉',icon:'📜',fmt:'Dim Sum Plates',region:'Cantonese',
-   origin:'Guangdong Province',flavors:['Silky','Savory','Light'],
-   desc:'Thin, silky steamed rice noodle sheets rolled around shrimp, char siu pork, or crispy fried dough (to make zhaliang), topped with sweet soy sauce. A dim sum cornerstone and a test of the kitchen\'s noodle skill.',
-   rests:[{id:1,note:'Sea Harbour classic'},{id:55,note:"Harlam's famous zhaliang version"}]},
-  {id:'ds2',name:'Zhaliang',zh:'炸两',icon:'📜',fmt:'Dim Sum Plates',region:'Cantonese',
-   origin:'Guangdong / Hong Kong',flavors:['Crispy','Sweet','Savory'],
-   desc:"A crispy you tiao (fried dough) wrapped inside a silky rice noodle roll, dressed with sweet soy, sesame seeds, and scallions. A breakfast street food staple. Harlam's Food Court version is an SGV landmark.",
-   bestIn:"Harlam's Food Court",bestSrc:'Resy',
-   rests:[{id:55,note:'The iconic SGV version — metal lawn chairs unchanged for decades',best:true}]},
-  {id:'ds3',name:'Lo Bak Go (Turnip Cake)',zh:'萝卜糕',icon:'🟫',fmt:'Dim Sum Plates',region:'Cantonese',
-   origin:'Guangdong Province',flavors:['Savory','Crispy','Umami'],
-   desc:'Steamed then pan-fried rice cake made from shredded daikon, dried shrimp, and rice flour. A dim sum staple especially beloved at Lunar New Year. The exterior should be crispy, the interior soft and yielding.',
-   rests:[{id:5,note:'888 Seafood classic cart version'},{id:4,note:'NBC push-cart version'}]},
-  {id:'ds4',name:'Egg Tart (Dan Tat)',zh:'蛋挞',icon:'🥧',fmt:'Dim Sum Plates',region:'Cantonese',
-   origin:'Guangdong / Hong Kong (British-influenced)',flavors:['Sweet','Silky','Buttery'],
-   desc:"Hong Kong's most beloved pastry — a flaky or shortcrust shell filled with smooth egg custard. The HK version uses a more layered pastry than the Portuguese-influenced Macau version. Both are represented in the SGV.",
-   rests:[{id:2,note:'Lunasia egg tart'},{id:16,note:'HK Macau Bistro Macau-style'}]},
-  {id:'ds5',name:'Char Siu Bao (BBQ Pork Bun)',zh:'叉烧包',icon:'🫓',fmt:'Dim Sum Plates',region:'Cantonese',
-   origin:'Guangdong Province',flavors:['Sweet','Savory','Fluffy'],
-   desc:'Steamed or baked buns stuffed with sweet roast pork. The steamed version is fluffy and white with a signature split top; the baked version has a glossy shell. One of the most universally beloved dim sum items.',
-   rests:[{id:4,note:'NBC Seafood classic baked version'},{id:1,note:'Sea Harbour steamed version'}]},
-  // ROASTS & BBQ
-  {id:'r1',name:'Peking Duck',zh:'北京烤鸭',icon:'🦆',fmt:'Roasts & BBQ',region:'Northern Chinese',
-   origin:'Beijing (Imperial Court — Ming Dynasty)',flavors:['Crispy','Rich','Savory'],
-   desc:"China's most ceremonial dish — ducks specially bred, air-dried, and roasted until the skin shatters. Traditionally served in two stages: skin first with sugar, then wrapped with cucumber, scallion, and plum sauce. Bistro Na's serves only 8 per night.",
-   bestIn:"Bistro Na's",bestSrc:'Saveur & Infatuation',
-   rests:[{id:33,note:'Qing Dynasty court preparation — reserve ahead',best:true},{id:34,note:'Ji Rong dedicated duck house'}]},
-  {id:'r2',name:'Char Siu (Cantonese BBQ Pork)',zh:'叉烧',icon:'🥩',fmt:'Roasts & BBQ',region:'Cantonese',
-   origin:'Guangdong Province',flavors:['Sweet','Caramelized','Savory'],
-   desc:'Pork shoulder marinated in honey, five spice, soy, and fermented red tofu, then roasted until caramelized and slightly charred at the edges. Pearl River Deli\'s version is regularly cited as one of LA\'s best.',
-   bestIn:'Pearl River Deli',bestSrc:'Eater & Infatuation',
-   rests:[{id:8,note:'LA Times, NY Times praised version',best:true}]},
-  {id:'r3',name:'Tea-Smoked Duck',zh:'樟茶鸭',icon:'🦆',fmt:'Roasts & BBQ',region:'Sichuan',
-   origin:'Chengdu, Sichuan Province',flavors:['Smoky','Aromatic','Crispy'],
-   desc:'Duck smoked over camphor wood and tea leaves, then deep-fried until crisp. A Sichuan classic predating the chili-heavy modern profile — showing the cuisine\'s older, more fragrant and subtle roots.',
-   bestIn:'Szechuan Impression',bestSrc:'Mala Market',
-   rests:[{id:19,note:'Szechuan Impression benchmark version',best:true}]},
-  {id:'r4',name:'Cantonese Roast Duck',zh:'烧鸭',icon:'🦆',fmt:'Roasts & BBQ',region:'Cantonese',
-   origin:'Guangdong Province',flavors:['Savory','Rich','Herbal'],
-   desc:'Whole duck lacquered in five-spice and maltose, roasted until the skin crisps. Less theatrical than Peking Duck — the flavor is deeper, more herbal, and served with plum dipping sauce. A Cantonese BBQ shop staple.',
-   rests:[{id:12,note:"Lu's Garden roast duck"},{id:8,note:'Pearl River Deli occasional special'}]},
-  // RICE DISHES
-  {id:'ri1',name:'Hainan Chicken Rice',zh:'海南鸡饭',icon:'🍚',fmt:'Rice Dishes',region:'Modern & Fusion',
-   origin:'Hainan Island / Singapore',flavors:['Delicate','Fragrant','Light'],
-   desc:"Poached free-range chicken over rice cooked in the bird's own stock with ginger, garlic, and pandan. A dish that migrated from Hainan Island through Southeast Asia to become Singapore's national dish. The SGV versions honor both traditions.",
-   bestIn:'Savoy Kitchen',bestSrc:'Resy',
-   rests:[{id:56,note:'38-year SGV institution — lines never stop',best:true},{id:8,note:'Pearl River Deli weekend special'}]},
-  {id:'ri2',name:'Lu Rou Fan (Braised Pork Rice)',zh:'卤肉饭',icon:'🍚',fmt:'Rice Dishes',region:'Taiwanese',
-   origin:'Taiwan',flavors:['Rich','Sweet-Savory','Umami'],
-   desc:"Taiwan's most beloved comfort dish — minced or cubed pork belly slow-braised in soy, five spice, rice wine, and hard-boiled eggs over steamed white rice. Every Taiwanese household and restaurant has its own closely guarded recipe.",
-   rests:[{id:29,note:'Dai Ho version'},{id:32,note:'Pepper Tavern version'}]},
-  // SOUPS
-  {id:'s1',name:"Emperor's Jar Soup",zh:'坛子肉',icon:'🫙',fmt:'Soups',region:'Northern Chinese',
-   origin:'Qing Dynasty Imperial Court, Beijing',flavors:['Complex','Umami','Luxurious'],
-   desc:"A Bistro Na's exclusive and one of SGV's most extraordinary dishes — beef tendon, fish maw, sea cucumber, mushrooms, and quail eggs suspended in concentrated chicken stock, sealed and steamed in a ceramic jar. Qing Dynasty court cuisine.",
-   bestIn:"Bistro Na's",bestSrc:'Saveur & Infatuation',
-   rests:[{id:33,note:'Exclusive to Bistro Na\'s in the United States',best:true}]},
-  {id:'s2',name:'Yangrou Paomo',zh:'羊肉泡馍',icon:'🍲',fmt:'Soups',region:'Northwestern',
-   origin:"Xi'an, Shaanxi Province",flavors:['Rich','Savory','Warming'],
-   desc:"One of northwestern China's most distinctive halal dishes — diners tear unleavened flatbread into small pieces themselves, then the kitchen cooks it into a rich lamb broth. A dish that requires participation and rewards patience.",
-   bestIn:'Shaanxi Garden',bestSrc:'LAist',
-   rests:[{id:41,note:'One of few SGV versions',best:true},{id:42,note:'Shaanxi Gourmet version'}]},
-  {id:'s3',name:'Wonton Noodle Soup',zh:'云吞面',icon:'🍜',fmt:'Soups',region:'Cantonese',
-   origin:'Guangdong / Hong Kong',flavors:['Delicate','Silky','Savory'],
-   desc:'Thin, hand-folded shrimp and pork wontons in a lard-enriched shrimp-shell broth with springy egg noodles. A marker of Cantonese kitchen skill — every element must be perfect. The signature dish of Hong Kong noodle culture.',
-   rests:[{id:55,note:"Harlam's classic version"},{id:13,note:'Kim Kee Noodle House version'}]},
-  {id:'s4',name:'Spicy Beef Noodle Soup',zh:'红烧牛肉面',icon:'🍜',fmt:'Soups',region:'Taiwanese',
-   origin:'Taiwan',flavors:['Spicy','Rich','Bold'],
-   desc:"Taiwan's national noodle in its spicy form — thick wheat noodles in a Sichuan doubanjiang-inflected beef shank broth. Dai Ho's version sells out by early afternoon every day. The quintessential Taiwan comfort experience.",
-   bestIn:'Dai Ho Restaurant',bestSrc:'Infatuation',
-   rests:[{id:29,note:'The benchmark SGV version — lunch only',best:true}]},
-  // MEAT DISHES
-  {id:'m1',name:'Toothpick Lamb',zh:'牙签羊肉',icon:'🍢',fmt:'Meat Dishes',region:'Sichuan',
-   origin:'Alhambra SGV (Chengdu Taste invention)',flavors:['Spicy','Cumin','Crispy'],
-   desc:"Chengdu Taste's most famous invention — slender lamb slivers each speared on a toothpick, wok-fried with dried chiles, Sichuan peppercorn, cumin, and sesame until crispy-edged. Became the most famous single dish in the entire 626.",
-   bestIn:'Chengdu Taste',bestSrc:'Infatuation & Resy',
-   rests:[{id:18,note:'The original — this dish was invented here',best:true},{id:19,note:'Szechuan Impression version'},{id:22,note:'Xiang La Hui charred version'}]},
-  {id:'m2',name:'Big Plate Chicken (Da Pan Ji)',zh:'大盘鸡',icon:'🍗',fmt:'Meat Dishes',region:'Northwestern',
-   origin:'Xinjiang Province',flavors:['Spicy','Aromatic','Hearty'],
-   desc:'A massive platter of bone-in chicken stewed with potatoes, bell peppers, star anise, and cumin served over hand-pulled noodles thick enough to require scissors. A Xinjiang Uyghur landmark — feast food for the table.',
-   bestIn:"Dolan's",bestSrc:'Infatuation & Saveur',
-   rests:[{id:44,note:'Best Uyghur preparation in SGV',best:true},{id:43,note:"Omar's classic version"}]},
-  {id:'m3',name:'Mapo Tofu',zh:'麻婆豆腐',icon:'🌶',fmt:'Meat Dishes',region:'Sichuan',
-   origin:'Chengdu, Sichuan Province (1862)',flavors:['Spicy','Numbing','Silky'],
-   desc:"Silken tofu and minced pork in a scarlet sauce of fermented black beans, doubanjiang, and Sichuan peppercorn. The má là sensation — simultaneously numbing and burning. An 1862 Chengdu invention named after the pockmarked woman who created it.",
-   bestIn:'Chengdu Taste',bestSrc:'Infatuation',
-   rests:[{id:18,note:'Definitive SGV version',best:true},{id:19,note:'Szechuan Impression lighter style'}]},
-  {id:'m4',name:'Water-Boiled Fish',zh:'水煮鱼',icon:'🐟',fmt:'Meat Dishes',region:'Sichuan',
-   origin:'Chongqing / Sichuan',flavors:['Spicy','Numbing','Silky'],
-   desc:"Thin-sliced fish fillet poached in a volcanic pool of chili oil, Sichuan peppercorns, and dried chiles. Despite the gentle name, the cooking happens when searingly hot oil is poured over the fish at the table — a dramatic presentation.",
-   bestIn:'Chengdu Taste',bestSrc:'Infatuation',
-   rests:[{id:18,note:'Green pepper sauce version — highly recommended',best:true},{id:21,note:'Spicy City version'}]},
-  {id:'m5',name:'Newport Special Lobster',zh:'特色龙虾',icon:'🦞',fmt:'Meat Dishes',region:'Cantonese',
-   origin:'San Gabriel (Newport Seafood invention)',flavors:['Buttery','Spicy','Savory'],
-   desc:"Newport Seafood's signature and one of the most celebrated dishes born in the SGV — a 4-pound-plus live lobster wok-fried and drenched in a rich, buttery sauce with scallions, jalapeños, ginger, and black pepper.",
-   bestIn:'Newport Seafood',bestSrc:'Infatuation',
-   rests:[{id:10,note:'The only restaurant that makes this exact version',best:true}]},
-  {id:'m6',name:'Perilla Bullfrog Hot Pot',zh:'紫苏牛蛙',icon:'🐸',fmt:'Meat Dishes',region:'Hunan',
-   origin:'Hunan Province',flavors:['Spicy','Aromatic','Tender'],
-   desc:'Dong Ting Chun\'s most celebrated dish — tender frog legs sizzling in perilla leaves, pickled chili, and Hunan spice. Lines of two hours are common on weekends. The bullfrog is live until service.',
-   bestIn:'Dong Ting Chun',bestSrc:'Yelp & community',
-   rests:[{id:45,note:'SGV institution — expect 2hr waits',best:true}]},
-  {id:'m7',name:'Three-Cup Chicken (San Bei Ji)',zh:'三杯鸡',icon:'🍗',fmt:'Meat Dishes',region:'Taiwanese',
-   origin:'Taiwan (Jiangxi roots)',flavors:['Savory','Sticky','Fragrant'],
-   desc:'Chicken braised in equal parts sesame oil, soy sauce, and rice wine with whole garlic, ginger, and copious Thai basil. The sauce reduces to a dark, sticky glaze. The basil added last wilts into the dish releasing a distinctive fragrance.',
-   rests:[{id:32,note:'Pepper Tavern version'},{id:29,note:'Dai Ho version'}]},
-  {id:'m8',name:"Chairman Mao's Red-Braised Pork",zh:'毛氏红烧肉',icon:'🥩',fmt:'Meat Dishes',region:'Hunan',
-   origin:'Shaoshan, Hunan Province',flavors:['Rich','Sweet-Savory','Caramelized'],
-   desc:"Mao Zedong's favorite dish — pork belly cubed and braised in soy sauce, Shaoxing wine, sugar, and star anise until lacquered and trembling. The Hunan version is less sweet and more robustly spiced than Shanghai hong shao rou.",
-   rests:[{id:46,note:'Picky Hunan version'},{id:47,note:'Hengry version'}]},
-  {id:'m9',name:'Cumin Lamb Kebabs',zh:'羊肉串',icon:'🍢',fmt:'Meat Dishes',region:'Northwestern',
-   origin:'Xinjiang Province / Central Asia',flavors:['Smoky','Cumin','Savory'],
-   desc:'The defining Uyghur street food — lamb chunks rubbed with cumin, chili flakes, and salt, then grilled over charcoal until charred. The cumin-lamb combination is the flavor signature of Xinjiang and Central Asian Muslim cuisine.',
-   bestIn:'Omar Restaurant',bestSrc:'LAist',
-   rests:[{id:43,note:"Omar's lamb kebab — cash only",best:true},{id:44,note:"Dolan's version"}]},
-  // SMALL PLATES & COLD
-  {id:'sp1',name:'Liangfen (Cold Mung Bean Jelly)',zh:'凉粉',icon:'🍡',fmt:'Small Plates & Cold',region:'Sichuan',
-   origin:'Sichuan Province',flavors:['Spicy','Tingly','Cooling'],
-   desc:'Translucent jelly noodles made from mung bean starch, served cold and dressed in a fiery sauce of chili oil, Sichuan peppercorn, garlic, and vinegar. The cooling jelly against blistering spice is the entire point.',
-   bestIn:'Chengdu Taste',bestSrc:'Mala Market',
-   rests:[{id:18,note:'Chengdu Taste complimentary starter',best:true}]},
-  {id:'sp2',name:'Rou Jia Mo (Chinese Burger)',zh:'肉夹馍',icon:'🫓',fmt:'Small Plates & Cold',region:'Northwestern',
-   origin:"Xi'an, Shaanxi Province",flavors:['Savory','Spiced','Crispy'],
-   desc:"A crispy unleavened bun split and filled with slow-braised spiced meat. Called the 'Chinese hamburger' by food writers — though it predates the hamburger by two millennia. Xi'an Famous Foods made this dish an American food sensation.",
-   bestIn:'Shaanxi Garden',bestSrc:'Matador Network',
-   rests:[{id:41,note:"Authentic Xi'an preparation",best:true},{id:42,note:'Shaanxi Gourmet version'}]},
-  {id:'sp3',name:'Fantuan (Sticky Rice Burrito)',zh:'饭团',icon:'🍙',fmt:'Small Plates & Cold',region:'Taiwanese',
-   origin:'Taiwan (Fujian roots)',flavors:['Savory','Chewy','Comforting'],
-   desc:'A Taiwanese breakfast staple — glutinous rice packed around you tiao fried dough, pickled vegetables, dried pork floss, and a fried egg. Huge Tree Pastry sells out every morning. A complete breakfast in one neat roll.',
-   bestIn:'Huge Tree Pastry',bestSrc:'Infatuation',
-   rests:[{id:17,note:'SGV morning institution — sells out early',best:true}]},
-  {id:'sp4',name:'HK Egg Waffles',zh:'鸡蛋仔',icon:'🧇',fmt:'Small Plates & Cold',region:'Hong Kong',
-   origin:'Hong Kong',flavors:['Sweet','Crispy','Eggy'],
-   desc:"Bubble-shaped Hong Kong street waffles cooked in a round-cell mold creating a grid of egg-shaped puffs. Crispy outside, custardy inside. Tasty Garden's Alhambra version is consistently cited among the best in SGV.",
-   bestIn:'Tasty Garden',bestSrc:'SINO in SoCal',
-   rests:[{id:14,note:'Consistently praised in SGV',best:true}]},
-  // HOT POT
-  {id:'hp1',name:'Mala Hot Pot',zh:'麻辣火锅',icon:'🫕',fmt:'Hot Pot',region:'Sichuan',
-   origin:'Chongqing, Sichuan Province',flavors:['Spicy','Numbing','Communal'],
-   desc:"Communal cooking in a rolling mala (numbing-spicy) broth loaded with dried chiles and Sichuan peppercorns. Diners cook their own ingredients at the table. Chongqing's greatest export and a global phenomenon.",
-   rests:[{id:49,note:'Hai Di Lao — theatrical tableside service'},{id:50,note:'Xiao Long Kan — Infatuation pick'}]},
-  {id:'hp2',name:'Mongolian Hot Pot',zh:'内蒙古涮羊肉',icon:'🫕',fmt:'Hot Pot',region:'Northern Chinese',
-   origin:'Inner Mongolia / Northern China',flavors:['Light','Clean','Savory'],
-   desc:'The original Chinese hot pot — a clear, clean mutton-based broth used to cook thin-sliced lamb, eaten with sesame paste and fermented tofu dipping sauce. Predates Sichuan hot pot and remains the purist version.',
-   rests:[{id:51,note:'Little Sheep Mongolian Hot Pot'}]},
-  // PASTRY & BREAD
-  {id:'pb1',name:'HK Milk Tea (Pantyhose Tea)',zh:'港式奶茶',icon:'🧋',fmt:'Pastry & Bread',region:'Hong Kong',
-   origin:'Hong Kong',flavors:['Rich','Creamy','Bitter-Sweet'],
-   desc:'Hong Kong\'s most beloved drink — strong Ceylon tea strained through a silk stocking (hence "pantyhose tea") blended with evaporated and condensed milk. The texture must be thick, silky, and deeply aromatic.',
-   bestIn:'Tasty Garden',bestSrc:'SINO in SoCal',
-   rests:[{id:14,note:'Tasty Garden — praised for tea quality',best:true},{id:15,note:'JJ Cafe classic cha chaan teng version'}]},
-  {id:'pb2',name:'Pineapple Bun (Bo Luo Bao)',zh:'菠萝包',icon:'🍞',fmt:'Pastry & Bread',region:'Hong Kong',
-   origin:'Hong Kong',flavors:['Sweet','Buttery','Fluffy'],
-   desc:"Hong Kong's iconic bakery bun — a fluffy roll with a crunchy sugar-and-lard crust scored to resemble a pineapple. No pineapple involved. Best served split with a thick slab of cold butter melting into the warm bread.",
-   rests:[{id:9,note:'Auntie Kitchen version'},{id:16,note:'HK Macau Bistro version'}]},
-  {id:'pb3',name:'Baked Pork Chop Rice',zh:'焗猪扒饭',icon:'🍚',fmt:'Pastry & Bread',region:'Hong Kong',
-   origin:'Hong Kong (British-Cantonese fusion)',flavors:['Savory','Cheesy','Comforting'],
-   desc:"A cha chaan teng icon — fried pork chop over tomato-sauced rice, topped with a creamy cheese sauce and baked until golden. A direct product of Hong Kong's colonial east-meets-west culinary history.",
-   rests:[{id:15,note:'JJ Cafe classic version'},{id:14,note:'Tasty Garden version'}]},
-  {id:'pb4',name:'Uyghur Lamb Naan (Samsa)',zh:'烤包子',icon:'🫓',fmt:'Pastry & Bread',region:'Northwestern',
-   origin:'Xinjiang Province / Central Asia',flavors:['Savory','Flaky','Spiced'],
-   desc:'Uyghur baked stuffed bread — flaky dough filled with minced lamb and onion, sealed and baked in a clay oven until the exterior blisters and crisps. A direct relative of the Central Asian samosa with Silk Road heritage.',
-   rests:[{id:44,note:"Dolan's version"},{id:43,note:"Omar's meat pie version"}]},
-];
-var DMap = {};
-DISHES.forEach(function(d){DMap[d.id]=d;});
-
-// ═══════════════════════════════════════════════════
 // DATA — RESTAURANTS
 // ═══════════════════════════════════════════════════
-var RESTS = [
-  {id:1,name:'Sea Harbour Seafood',city:'Rosemead',region:'Cantonese',sub:'Dim Sum & Yum Cha',prov:'Guangdong (Cantonese)',sec:[],dishes:['Truffle Siu Mai','Gold Lava Buns','Egg White Custard Tart'],best:['Truffle Siu Mai','Har Gow'],notes:"SGV's most celebrated dim sum. 20-year institution. Infatuation top pick.",halal:false,mich:false,lat:34.0601,lng:-118.0724,tags:['dim-sum','seafood']},
-  {id:2,name:'Lunasia Dim Sum House',city:'Alhambra',region:'Cantonese',sub:'Dim Sum & Yum Cha',prov:'Guangdong (Cantonese)',sec:[],dishes:['Pork Siu Mai','Spinach & Shrimp Dumplings','Pan-Fried String Beans w/ Pork'],best:['Pork Siu Mai'],notes:"Infatuation 8.5 — \"the best dim sum in Los Angeles.\" Serves dim sum at dinner too.",halal:false,mich:false,lat:34.0817,lng:-118.1272,tags:['dim-sum']},
-  {id:3,name:'Chef Tony Seafood',city:'Arcadia',region:'Cantonese',sub:'Dim Sum & Yum Cha',prov:'Guangdong (Cantonese)',sec:[],dishes:['Truffle-Topped Shu Mai','French-Style Baked Pork Bun','Mummy-Wrapped Fried Prawns'],best:['Truffle-Topped Shu Mai'],notes:'Sea Harbour spinoff — more accessible but still exceptional quality.',halal:false,mich:false,lat:34.1397,lng:-118.0353,tags:['dim-sum','seafood']},
-  {id:4,name:'NBC Seafood Restaurant',city:'Monterey Park',region:'Cantonese',sub:'Dim Sum & Yum Cha',prov:'Guangdong (Cantonese)',sec:[],dishes:['Crystal Shrimp Dumplings','Steamed Pork Ribs','Baked Char Siu Bao'],best:['Crystal Shrimp Dumplings'],notes:'One of the few remaining push-cart dim sum halls in the SGV.',halal:false,mich:false,lat:34.0633,lng:-118.1231,tags:['dim-sum','seafood']},
-  {id:5,name:'888 Seafood Restaurant',city:'Rosemead',region:'Cantonese',sub:'Dim Sum & Yum Cha',prov:'Guangdong (Cantonese)',sec:[],dishes:['Har Gow','Turnip Cake (Lo Bak Go)','Cheung Fun'],best:['Har Gow'],notes:'Old-school push-cart service. Landmark banquet hall.',halal:false,mich:false,lat:34.0659,lng:-118.0780,tags:['dim-sum','seafood']},
-  {id:6,name:'Crystal Palace',city:'Monterey Park',region:'Cantonese',sub:'Dim Sum & Yum Cha',prov:'Guangdong (Cantonese)',sec:[],dishes:['Baked BBQ Pork Buns','Shrimp Har Gow','Egg Yolk Lava Buns'],best:['Egg Yolk Lava Buns'],notes:'Praised for flaky buns and piping-hot dumplings.',halal:false,mich:false,lat:34.0641,lng:-118.1180,tags:['dim-sum']},
-  {id:7,name:'Lunasia (Pasadena)',city:'Pasadena',region:'Cantonese',sub:'Classic Cantonese',prov:'Guangdong (Cantonese)',sec:[],dishes:['Chicken Stuffed w/ Shrimp Paste','Luffa w/ Salted Egg Yolk','Wokked Chayote w/ Pork'],best:['Chicken Stuffed w/ Shrimp Paste'],notes:'Saveur-featured. Seasonal & quality-focused. Opened 2022.',halal:false,mich:false,lat:34.1478,lng:-118.1445,tags:['dim-sum']},
-  {id:8,name:'Pearl River Deli',city:'San Gabriel',region:'Cantonese',sub:'Cantonese Roast & BBQ',prov:'Guangdong (Cantonese / Taishan)',sec:['Modern & Fusion'],dishes:['Roasted Char Siu Pork','Hainan Chicken Rice (wknd)','Seasonal Market Plates'],best:['Roasted Char Siu Pork'],notes:'LA Times, NY Times, Eater, Infatuation accolades. Chef Johnny Lee.',halal:false,mich:false,lat:34.0964,lng:-118.1059,tags:['seafood']},
-  {id:9,name:'Auntie Kitchen',city:'Alhambra',region:'Cantonese',sub:'Cantonese Roast & BBQ',prov:'Guangdong (Cantonese)',sec:[],dishes:['Congee','Cantonese BBQ Plates','Pineapple Bun (Bo Luo Bao)'],best:['Congee'],notes:'Café prices for classic roast and rice plates.',halal:false,mich:false,lat:34.0820,lng:-118.1295,tags:[]},
-  {id:10,name:'Newport Seafood',city:'San Gabriel',region:'Cantonese',sub:'Cantonese Seafood Banquet',prov:'Guangdong / Vietnamese-Chinese',sec:['Modern & Fusion'],dishes:['House Special Lobster (jalapeño-butter)','Shaking Beef','Wok-Fried Clams'],best:['House Special Lobster (jalapeño-butter)'],notes:'SGV lobster institution. Infatuation reviewed. Vietnamese-Chinese influence.',halal:false,mich:false,lat:34.0968,lng:-118.1040,tags:['seafood']},
-  {id:11,name:'Boston Lobster',city:'Rosemead',region:'Cantonese',sub:'Cantonese Seafood Banquet',prov:'Guangdong (Cantonese)',sec:[],dishes:['Live Lobster (various preps)','Stir-Fried Crab','Wok-Fried Prawns'],best:['Live Lobster (various preps)'],notes:'Multi-location SGV seafood chain.',halal:false,mich:false,lat:34.0627,lng:-118.0817,tags:['seafood']},
-  {id:12,name:"Lu's Garden",city:'San Gabriel',region:'Cantonese',sub:'Cantonese Seafood Banquet',prov:'Guangdong (Cantonese)',sec:[],dishes:['Live Lobster','Stir-Fried Pea Sprouts w/ Garlic','Roast Duck'],best:['Stir-Fried Pea Sprouts w/ Garlic'],notes:'Yelp top-10 consistent performer.',halal:false,mich:false,lat:34.0971,lng:-118.1055,tags:['seafood','dim-sum']},
-  {id:13,name:'Kim Kee Noodle House',city:'Monterey Park / Rosemead',region:'Teochew',sub:'Teochew Noodles',prov:'Eastern Guangdong (Chaozhou)',sec:[],dishes:['Teochew Noodle Soup (shrimp & beef)','Allium-Infused Oil Noodles','Rice Noodle Dishes'],best:['Teochew Noodle Soup (shrimp & beef)'],notes:"SGV institution since the 1970s. Johnny Lee (Pearl River Deli) calls it the cornerstone of Teochew culture in the SGV.",halal:false,mich:false,lat:34.0609,lng:-118.1227,tags:['noodles']},
-  {id:14,name:'Tasty Garden',city:'Alhambra',region:'Hong Kong',sub:'Cha Chaan Teng',prov:'Hong Kong',sec:[],dishes:['HK Milk Tea','Egg Waffles (Gai Daan Zai)','Baked Pork Chop Rice'],best:['HK Milk Tea','Egg Waffles (Gai Daan Zai)'],notes:'Mini SoCal chain; Alhambra location praised for milk tea and egg waffles.',halal:false,mich:false,lat:34.0756,lng:-118.1270,tags:[]},
-  {id:15,name:'JJ Cafe',city:'Monterey Park',region:'Hong Kong',sub:'Cha Chaan Teng',prov:'Hong Kong',sec:[],dishes:['Baked Pork Chop Rice','HK Milk Tea','East-West Fusion Dishes'],best:['Baked Pork Chop Rice'],notes:'One of the first popular cha chaan tengs in SGV; open for decades.',halal:false,mich:false,lat:34.0621,lng:-118.1253,tags:[]},
-  {id:16,name:'HK Macau Bistro',city:'San Gabriel',region:'Hong Kong',sub:'Cha Chaan Teng',prov:'Hong Kong / Macau',sec:[],dishes:['Baked Portuguese Egg Tarts','Pineapple Bun w/ Butter','HK Milk Tea'],best:['Baked Portuguese Egg Tarts'],notes:'Macanese-influenced HK café items.',halal:false,mich:false,lat:34.0960,lng:-118.1051,tags:[]},
-  {id:17,name:'Huge Tree Pastry',city:'Monterey Park',region:'Hong Kong',sub:'HK Breakfast & Dai Pai Dong',prov:'Hong Kong / Taiwan',sec:['Taiwanese'],dishes:['Fantuan (Sticky Rice Roll)','Soy Milk','Steamed Dumplings'],best:['Fantuan (Sticky Rice Roll)'],notes:'Beloved breakfast spot; sells out early. Cash only.',halal:false,mich:false,lat:34.0632,lng:-118.1220,tags:[]},
-  {id:18,name:'Chengdu Taste',city:'Alhambra',region:'Sichuan',sub:'Chengdu Classic',prov:'Sichuan Province',sec:[],dishes:['Toothpick Lamb w/ Cumin','Dan Dan Noodles','Boiled Fish w/ Green Pepper Sauce'],best:['Toothpick Lamb w/ Cumin','Dan Dan Noodles'],notes:'Landmark that popularized Sichuan in LA. Infatuation top pick. Chef Tony Xu James Beard nominated 2018.',halal:false,mich:false,lat:34.0831,lng:-118.1286,tags:['noodles']},
-  {id:19,name:'Szechuan Impression',city:'Alhambra',region:'Sichuan',sub:'Chengdu Classic',prov:'Sichuan Province',sec:[],dishes:['Tea-Smoked Duck','Smoked Pork Ribs','Liangfen (Cold Mung Bean Jelly)'],best:['Tea-Smoked Duck'],notes:'Founded by Chengdu Taste alumni; stylish modern Sichuan décor.',halal:false,mich:false,lat:34.0838,lng:-118.1301,tags:[]},
-  {id:20,name:'Mian',city:'San Gabriel',region:'Sichuan',sub:'Chongqing Style',prov:'Sichuan Province (Chongqing)',sec:[],dishes:['Chongqing-Style Noodles','Dan Dan Noodles','House-Made Noodle Bowls'],best:['Chongqing-Style Noodles'],notes:'From Chengdu Taste team; mala noodle bar format. Infatuation pick.',halal:false,mich:false,lat:34.0955,lng:-118.1043,tags:['noodles']},
-  {id:21,name:'Spicy City',city:'Rosemead',region:'Sichuan',sub:'Chongqing Style',prov:'Sichuan / Chongqing',sec:[],dishes:['Hot Pepper Chicken','Twice-Cooked Pork w/ Bao','Chongqing Hot Noodles'],best:['Hot Pepper Chicken'],notes:'Extensive Chongqing-style menu; heavy on fresh chiles.',halal:false,mich:false,lat:34.0634,lng:-118.0866,tags:['noodles']},
-  {id:22,name:'Xiang La Hui',city:'San Gabriel',region:'Sichuan',sub:'Chongqing Style',prov:'Sichuan Province',sec:[],dishes:['Chongqing Fried Chicken','Toothpick Lamb','Happy Chicken (Mala-Crisp)'],best:['Happy Chicken (Mala-Crisp)'],notes:'Infatuation pick — "the sleeper Sichuan hit." More fragrance than heat.',halal:false,mich:false,lat:34.0960,lng:-118.1035,tags:[]},
-  {id:23,name:'Din Tai Fung',city:'Arcadia',region:'Shanghainese',sub:'Shanghai Classic',prov:'Shanghai / Jiangsu (Taiwan-rooted)',sec:['Taiwanese'],dishes:['Xiao Long Bao','Steamed Shrimp & Pork Dumplings','Truffle Fried Rice'],best:['Xiao Long Bao'],notes:'Flagship SGV location in Westfield Santa Anita. Iconic lantern chandelier. Infatuation pick.',halal:false,mich:false,lat:34.1347,lng:-118.0260,tags:['dim-sum']},
-  {id:24,name:'Jiang Nan Spring',city:'Alhambra',region:'Shanghainese',sub:'Shanghai Classic',prov:'Shanghai / Jiangsu',sec:[],dishes:['Dongpo Braised Pork','Lion\'s Head Meatballs','Stir-Fried Rice Cakes (Nian Gao)'],best:['Dongpo Braised Pork'],notes:'Infatuation noted — large portions, expert servers, crowd-pleasing.',halal:false,mich:false,lat:34.0810,lng:-118.1270,tags:[]},
-  {id:25,name:'Auntie Qiu Kitchen',city:'Alhambra',region:'Shanghainese',sub:'Shanghai Classic',prov:'Shanghai',sec:[],dishes:['Pan-Fried Pork Buns (Sheng Jian Bao)','Noodle Soups','Braised Dishes'],best:['Pan-Fried Pork Buns (Sheng Jian Bao)'],notes:'Shanghai-style comfort food at reasonable prices.',halal:false,mich:false,lat:34.0818,lng:-118.1295,tags:['noodles']},
-  {id:26,name:'Good Alley',city:'Rosemead',region:'Shanghainese',sub:'Shanghai Classic',prov:'Shanghai / Northern China',sec:['Modern & Fusion'],dishes:['Soup Dumplings (XLB)','Wagyu Beef Burger','Cold Sesame Noodles'],best:['Soup Dumplings (XLB)'],notes:'Hand-muddled jasmine lime tea. Critic + creator pick 2024.',halal:false,mich:false,lat:34.0640,lng:-118.0769,tags:['noodles','dim-sum']},
-  {id:27,name:'Paradise Dynasty',city:'Arcadia',region:'Shanghainese',sub:'Shanghainese-Singaporean',prov:'Shanghai / Singapore',sec:[],dishes:['Rainbow Xiao Long Bao (8 flavors)','Pan-Fried Buns','Noodle & Stir-Fry Dishes'],best:['Rainbow Xiao Long Bao (8 flavors)'],notes:'Singapore-based chain; colorful XLB a viral SGV hit.',halal:false,mich:false,lat:34.1351,lng:-118.0265,tags:['dim-sum']},
-  {id:28,name:'No. 8 on the Bund',city:'San Gabriel',region:'Shanghainese',sub:'Shanghai Classic',prov:'Shanghai',sec:[],dishes:['Scallion Oil Noodles','Braised Pork Belly','XLB'],best:['Scallion Oil Noodles'],notes:"Named after Shanghai's Bund waterfront district.",halal:false,mich:false,lat:34.0967,lng:-118.1058,tags:['noodles']},
-  {id:29,name:'Dai Ho Restaurant',city:'Temple City',region:'Taiwanese',sub:'Classic Taiwanese',prov:'Taiwan',sec:[],dishes:['Spicy Beef Noodle Soup','Braised Pork Rice (Lu Rou Fan)','Cold Appetizer Plates'],best:['Spicy Beef Noodle Soup'],notes:'Infatuation pick. Lunch only — opens 11am, sells out by 2:30pm. 30+ year institution.',halal:false,mich:false,lat:34.1071,lng:-118.0570,tags:['noodles']},
-  {id:30,name:'Blue Magpie',city:'Arcadia',region:'Taiwanese',sub:'Contemporary / Modern Taiwanese',prov:'Taiwan',sec:[],dishes:['Elevated Braised Pork Belly Rice','Oyster Vermicelli (refined)','Seasonal Tasting Plates'],best:['Seasonal Tasting Plates'],notes:'Opened 2023; elevated reimagining of Taiwanese classics.',halal:false,mich:false,lat:34.1392,lng:-118.0366,tags:[]},
-  {id:31,name:'Bopomofu',city:'Alhambra',region:'Taiwanese',sub:'Contemporary / Modern Taiwanese',prov:'Taiwan / California',sec:['Modern & Fusion'],dishes:['Honey-Walnut Shrimp Burger','Scallion Pancake Sandwich','Boba Slushes'],best:['Honey-Walnut Shrimp Burger'],notes:'Saveur-featured. Playful Taiwanese-American mashups.',halal:false,mich:false,lat:34.0826,lng:-118.1280,tags:[]},
-  {id:32,name:'Pepper Tavern',city:'San Gabriel',region:'Taiwanese',sub:'Classic Taiwanese',prov:'Taiwan',sec:[],dishes:['San Bei Ji (Three-Cup Chicken)','Taiwanese Pork Chop Rice','Stinky Tofu'],best:['San Bei Ji (Three-Cup Chicken)'],notes:'Yelp top-10 San Gabriel; authentic Taiwanese comfort food.',halal:false,mich:false,lat:34.0972,lng:-118.1050,tags:[]},
-  {id:33,name:"Bistro Na's",city:'Temple City',region:'Northern Chinese',sub:'Beijing & Imperial Court',prov:'Beijing / Qing Dynasty Imperial Court',sec:[],dishes:["Peking Duck (8 per night)","Emperor's Jar Soup","Angus Beef w/ Green Peppercorn"],best:["Peking Duck (8 per night)","Emperor's Jar Soup"],notes:'Infatuation 9.4. Saveur-featured. Michelin star. Only US restaurant serving Qing Dynasty Imperial cuisine. Reserve well ahead.',halal:false,mich:true,lat:34.1069,lng:-118.0558,tags:[]},
-  {id:34,name:'Ji Rong Peking Duck',city:'San Gabriel',region:'Northern Chinese',sub:'Beijing & Imperial Court',prov:'Beijing',sec:[],dishes:['Peking Duck','Duck Breast Slices','Duck Bone Soup'],best:['Peking Duck'],notes:'Yelp top-10 San Gabriel. Dedicated Peking duck house.',halal:false,mich:false,lat:34.0969,lng:-118.1060,tags:[]},
-  {id:35,name:'101 Noodle Express',city:'Alhambra',region:'Northern Chinese',sub:'Shandong (Lu Cuisine)',prov:'Beijing / Northern China',sec:[],dishes:['Beef Roll (Niu Rou Juan Bing)','Hand-Pulled Noodles','Pan-Fried Dumplings (Guotie)'],best:['Beef Roll (Niu Rou Juan Bing)'],notes:'Iconic SGV-born chain. Beef roll became a California-Beijing landmark dish.',halal:false,mich:false,lat:34.0801,lng:-118.1295,tags:['noodles']},
-  {id:36,name:"Yang's Kitchen",city:'Alhambra',region:'Modern & Fusion',sub:'Chinese-American Modern',prov:'Taiwan / California',sec:['Taiwanese'],dishes:['Dan Dan Campanelle','Hainan Fish Rice w/ Chili Butter','Creamy Prawns & Millet'],best:['Dan Dan Campanelle','Hainan Fish Rice w/ Chili Butter'],notes:'Infatuation 9.1 — "one of the best places to eat in the entire city." Wine-friendly. Bookstore-café vibe.',halal:false,mich:false,lat:34.0805,lng:-118.1264,tags:['noodles']},
-  {id:37,name:'Northern Cafe',city:'San Gabriel',region:'Northern Chinese',sub:'Northeastern / Dongbei',prov:'Hebei / Liaoning / Northern China',sec:[],dishes:["Wife's Special Noodles (3-topping)",'Lamb Soup Noodles','Small Round Rolled Noodles'],best:["Wife's Special Noodles (3-topping)"],notes:'Infatuation pick. Unique noodle styles from northern China; strip-mall gem.',halal:false,mich:false,lat:34.0958,lng:-118.1047,tags:['noodles']},
-  {id:38,name:"Mama Lu's Dumpling House",city:'San Gabriel',region:'Northern Chinese',sub:'Northeastern / Dongbei',prov:'Northeastern China',sec:[],dishes:['Pan-Fried Dumplings (Guotie)','Stir-Fried Rice Cakes','Steamed Buns'],best:['Pan-Fried Dumplings (Guotie)'],notes:'Infatuation pick. Massive portions at low prices.',halal:false,mich:false,lat:34.0963,lng:-118.1055,tags:[]},
-  {id:39,name:'Hui Tou Xiang',city:'San Gabriel',region:'Northern Chinese',sub:'Northeastern / Dongbei',prov:'Northern China',sec:[],dishes:['Hui Tou Potstickers (oblong pan-fried)','Spicy Beef Noodle Soup','Pan-Fried Dumplings'],best:['Hui Tou Potstickers (oblong pan-fried)'],notes:'Award-winning house potsticker style. Stamp card rewards.',halal:false,mich:false,lat:34.0961,lng:-118.1042,tags:['noodles']},
-  {id:40,name:'Prince Dumpling',city:'Rosemead',region:'Northern Chinese',sub:'Northeastern / Dongbei',prov:'Northern China / Shanghai',sec:['Shanghainese'],dishes:['Xiao Long Bao','Northern-Style Dumplings','Fried Rice'],best:['Xiao Long Bao'],notes:'Praised alt to Din Tai Fung for broth-locked XLB.',halal:false,mich:false,lat:34.0618,lng:-118.0835,tags:[]},
-  {id:41,name:'Shaanxi Garden',city:'San Gabriel',region:'Northwestern',sub:"Shaanxi / Xi'an",prov:"Shaanxi Province (Xi'an)",sec:[],dishes:['Rou Jia Mo (Spiced Meat Bun)','Yangrou Paomo (Lamb Bread Stew)','Biang Biang Noodles'],best:['Rou Jia Mo (Spiced Meat Bun)'],notes:"Xi'an couple owners. Wife cooks halal dishes. Featured in Matador Network.",halal:false,mich:false,lat:34.0975,lng:-118.1061,tags:['noodles']},
-  {id:42,name:'Shaanxi Gourmet',city:'San Gabriel',region:'Northwestern',sub:"Shaanxi / Xi'an",prov:"Shaanxi Province (Xi'an)",sec:[],dishes:['Yangrou Paomo','Hand-Pulled Noodles','Lamb Kebabs'],best:['Yangrou Paomo'],notes:"Terracotta soldier décor; chef trained in Xi'an. Timeout LA featured.",halal:false,mich:false,lat:34.0972,lng:-118.1048,tags:['noodles']},
-  {id:43,name:'Omar Restaurant',city:'San Gabriel',region:'Northwestern',sub:'Xinjiang / Uyghur (Halal)',prov:'Xinjiang Province',sec:[],dishes:['Big Plate Chicken (Da Pan Ji)','Cumin Lamb Kebabs','Lamb & Hand-Pulled Noodles'],best:['Cumin Lamb Kebabs'],notes:'Cash only. Homemade yogurt & savory milk tea. LAist featured.',halal:true,mich:false,lat:34.0957,lng:-118.1039,tags:['noodles','halal']},
-  {id:44,name:"Dolan's",city:'Alhambra',region:'Northwestern',sub:'Xinjiang / Uyghur (Halal)',prov:'Xinjiang Province',sec:[],dishes:['Big Plate Chicken','Laghman Noodles (hand-pulled)','Beef & Lamb Naan'],best:['Big Plate Chicken','Laghman Noodles (hand-pulled)'],notes:'Infatuation & Saveur featured. Cardamom tea. Best Uyghur restaurant in the SGV.',halal:true,mich:false,lat:34.0822,lng:-118.1291,tags:['noodles','halal']},
-  {id:45,name:'Dong Ting Chun',city:'San Gabriel',region:'Hunan',sub:'Classic Hunan',prov:'Hunan Province',sec:[],dishes:['Perilla Bullfrog Hot Pot','Smoked Pork w/ Pickled Peppers','Spicy Fish'],best:['Perilla Bullfrog Hot Pot'],notes:'Yelp top-10 San Gabriel. 2-hour waits common on weekends. Full Hunan authenticity.',halal:false,mich:false,lat:34.0964,lng:-118.1060,tags:[]},
-  {id:46,name:'Picky Hunan',city:'Alhambra',region:'Hunan',sub:'Classic Hunan',prov:'Hunan Province',sec:[],dishes:["Chairman Mao's Red-Braised Pork",'Steamed Fish Head w/ Chili','Hunan Spicy Fried Chicken'],best:["Chairman Mao's Red-Braised Pork"],notes:'Popular newer Hunan entrant in west SGV.',halal:false,mich:false,lat:34.0840,lng:-118.1305,tags:[]},
-  {id:47,name:'Hengry',city:'Alhambra',region:'Hunan',sub:'Classic Hunan',prov:'Hunan Province',sec:[],dishes:['Braised Pork Belly','Spicy Regional Dishes','Smoked Meats'],best:['Braised Pork Belly'],notes:'Critic + platform pick. Yelp top-10 Alhambra.',halal:false,mich:false,lat:34.0815,lng:-118.1280,tags:[]},
-  {id:48,name:'Yunnan Restaurant',city:'Monterey Park',region:'Southwestern',sub:'Yunnan',prov:'Yunnan Province',sec:[],dishes:['Spicy Fish Fillet','Toothpick Lamb','Sour-Spicy Cold Cucumber Ribbons'],best:['Spicy Fish Fillet'],notes:'Yunnan-Laos-Myanmar border cuisine in the SGV.',halal:false,mich:false,lat:34.0625,lng:-118.1215,tags:[]},
-  {id:49,name:'Hai Di Lao Hot Pot',city:'Arcadia',region:'Sichuan',sub:'Sichuan Hot Pot',prov:'Sichuan Province (chain origin)',sec:[],dishes:['Customized Mala Broth','Hand-Made Noodle Show','Wagyu Beef Slices'],best:['Customized Mala Broth'],notes:'Premium mainland China chain. Theatrical tableside service.',halal:false,mich:false,lat:34.1344,lng:-118.0258,tags:['hotpot']},
-  {id:50,name:'Xiao Long Kan Hot Pot',city:'Alhambra',region:'Sichuan',sub:'Sichuan Hot Pot',prov:'Sichuan Province (Chengdu)',sec:[],dishes:['Mala Broth','Beef Tripe','House Specialty Dips'],best:['Mala Broth'],notes:'Trendy Chengdu chain. Infatuation pick.',halal:false,mich:false,lat:34.0822,lng:-118.1291,tags:['hotpot']},
-  {id:51,name:'Little Sheep Mongolian Hot Pot',city:'Monterey Park',region:'Northern Chinese',sub:'Northeastern / Dongbei',prov:'Inner Mongolia',sec:[],dishes:['Lamb Slices','Inner Mongolian Broth','Sesame Dipping Sauce'],best:['Lamb Slices'],notes:'Original broth-based Mongolian hot pot chain.',halal:false,mich:false,lat:34.0629,lng:-118.1233,tags:['hotpot']},
-  {id:52,name:'Meizhou Dongpo',city:'Arcadia',region:'Sichuan',sub:'Chengdu Classic',prov:'Sichuan Province',sec:[],dishes:['Dongpo Pork','Meizhou Tofu','Twice-Cooked Pork'],best:['Dongpo Pork'],notes:'Mainland Chinese upscale chain. Westfield Santa Anita anchor.',halal:false,mich:false,lat:34.1348,lng:-118.0261,tags:[]},
-  {id:53,name:'Bistro 1968',city:'San Gabriel',region:'Cantonese',sub:'Dim Sum & Yum Cha',prov:'Guangdong (Cantonese)',sec:[],dishes:['Wagyu Beef Noodles','Har Gow','Egg Tarts'],best:['Har Gow'],notes:'All-you-can-eat dim sum ~$25/person. Budget-friendly option.',halal:false,mich:false,lat:34.0960,lng:-118.1043,tags:['dim-sum']},
-  {id:54,name:'Five Five',city:'Arcadia',region:'Cantonese',sub:'Classic Cantonese',prov:'Guangdong (Cantonese)',sec:[],dishes:['Salted Fish Peanut Congee','Wonton Noodle Soup','Peppercorn Chili Oil Wontons'],best:['Salted Fish Peanut Congee'],notes:'Cozy spot; house-made chili oil a standout.',halal:false,mich:false,lat:34.1388,lng:-118.0347,tags:['noodles']},
-  {id:55,name:"Harlam's Food Court",city:'Rosemead',region:'Hong Kong',sub:'HK Breakfast & Dai Pai Dong',prov:'Guangdong / Hong Kong',sec:['Cantonese'],dishes:['Zhaliang (Rice Noodle Donut)','Wonton Noodle Soup','Congee'],best:['Zhaliang (Rice Noodle Donut)'],notes:'Iconic strip-mall food stall. Metal lawn chairs unchanged for decades. Resy-featured.',halal:false,mich:false,lat:34.0658,lng:-118.0775,tags:['dim-sum']},
-  {id:56,name:'Savoy Kitchen',city:'Alhambra',region:'Modern & Fusion',sub:'Hainan / Southeast Asian-Chinese',prov:'Hainan Island / Southeast Asia',sec:[],dishes:['Hainan Chicken Rice','Southeast Asian Specialties','Pasta Dishes'],best:['Hainan Chicken Rice'],notes:'38-year SGV institution. Lines never let up. Resy-featured.',halal:false,mich:false,lat:34.0798,lng:-118.1259,tags:['seafood']},
-];
+var RESTS = [];
+var DISHES_DATA = [];
 var RstMap = {};
-RESTS.forEach(function(r){RstMap[r.id]=r;});
+var DMap = {};
 
 // ═══════════════════════════════════════════════════
 // STATE
@@ -1644,9 +1366,111 @@ window.addEventListener('load', function(){
 });
 
 // ═══════════════════════════════════════════════════
-// INIT
+// BOOTSTRAP — fetch live data then init
 // ═══════════════════════════════════════════════════
-renderHome();
+(function() {
+  var overlay = document.getElementById('loading-overlay');
+
+  function hideOverlay() {
+    overlay.classList.add('hidden');
+    setTimeout(function(){ overlay.style.display='none'; }, 450);
+  }
+
+  function mapRestaurant(r) {
+    // Extract dishes — JSON uses bestDishes array or dishDetails array
+    var dishList = r.bestDishes || r.dishes || [];
+    if (!dishList.length && r.dishDetails) {
+      dishList = r.dishDetails.map(function(d){ return d.name; });
+    }
+    // Also try flat fields from sweep format
+    if (!dishList.length) {
+      dishList = [r.best_dish_1, r.best_dish_2, r.best_dish_3].filter(Boolean);
+    }
+
+    // Extract photos — JSON uses photos object or flat fields
+    var photos = r.photos || {};
+    var ext  = photos.exterior  || r.photo_exterior || '';
+    var fd1  = photos.food1     || r.photo_food1    || '';
+    var fd2  = photos.food2     || r.photo_food2    || '';
+    var intr = photos.interior  || r.photo_interior  || '';
+
+    // Secondary regions — JSON uses secondaryRegions or sec
+    var sec = r.secondaryRegions || r.secondary_regions || r.sec || [];
+
+    return {
+      id:     r.id || r.googlePlaceId || r.google_place_id || Math.random(),
+      name:   r.name || r.name_en || '',
+      zh:     r.nameChinese || r.name_zh || '',
+      city:   r.city || '',
+      region: r.region || 'Modern & Fusion',
+      sub:    r.subregion || r.sub || '',
+      prov:   r.province || r.prov || '',
+      sec:    sec,
+      dishes: dishList,
+      best:   dishList.slice(0, 2),
+      notes:  r.notes || '',
+      halal:  r.halal === true || r.halal === 'TRUE',
+      mich:   r.michelin === true || r.michelin === 'TRUE',
+      michelinLabel: r.michelinLabel || '',
+      lat:    parseFloat(r.lat) || 0,
+      lng:    parseFloat(r.lng) || 0,
+      tags:   r.tags || [],
+      photos: { exterior: ext, food1: fd1, food2: fd2, interior: intr },
+      price:  r.price || r.price_range || '',
+      phone:  r.phone || '',
+      website: r.website || '',
+      address: r.address || '',
+      hours:  r.hours || {},
+      yelpId: r.yelpId || r.yelp_id || '',
+      yelp_rating: r.yelpRating || r.yelp_rating || null,
+      yelp_count:  r.yelpReviewCount || r.yelp_review_count || null,
+      sources: r.sources || []
+    };
+  }
+
+  function mapDish(d) {
+    return {
+      id:    d.id || d.dish_id || '',
+      name:  d.name || d.name_en || '',
+      zh:    d.nameChinese || d.name_zh || '',
+      fmt:   d.formatGroup || d.format_group || d.fmt || 'Other',
+      origin:d.origin || '',
+      desc:  d.description || d.desc || '',
+      tags:  d.flavorTags || d.flavor_tags || d.tags || [],
+      best:  d.bestInSgv || d.best_in_sgv || d.best || '',
+      rests: d.restaurants || d.rests || []
+    };
+  }
+
+  fetch('data/restaurants.json')
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function(data) {
+      // Support both array format and {restaurants:[...]} object format
+      var rawRests = Array.isArray(data) ? data : (data.restaurants || []);
+      var rawDishes = data.dishes || [];
+
+      RESTS = rawRests.map(mapRestaurant).filter(function(r){ return r.name && r.status !== 'CLOSED'; });
+      RESTS.forEach(function(r){ RstMap[r.id] = r; });
+
+      if (rawDishes.length) {
+        DISHES = rawDishes.map(mapDish);
+        DISHES.forEach(function(d){ DMap[d.id] = d; });
+      }
+
+      hideOverlay();
+      renderHome();
+    })
+    .catch(function(err) {
+      console.warn('Could not load restaurants.json:', err.message);
+      // Graceful fallback: hide spinner, render with empty data
+      hideOverlay();
+      renderHome();
+    });
+})();
+
 </script>
 </body>
 </html>
