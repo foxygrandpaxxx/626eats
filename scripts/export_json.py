@@ -63,6 +63,16 @@ REST_COLS = {
     "date_added":    39,  # AM
     "date_verified": 40,  # AN
     "added_by":      41,  # AO
+    # Dish columns (enriched from Google reviews + Claude)
+    "dish1_name":    42,  # AP
+    "dish1_cat":     43,  # AQ
+    "dish1_summary": 44,  # AR
+    "dish2_name":    45,  # AS
+    "dish2_cat":     46,  # AT
+    "dish2_summary": 47,  # AU
+    "dish3_name":    48,  # AV
+    "dish3_cat":     49,  # AW
+    "dish3_summary": 50,  # AX
 }
 
 DISH_COLS = {
@@ -82,16 +92,18 @@ DISH_COLS = {
 }
 
 LINK_COLS = {
-    "link_id":    1,
-    "rest_id":    2,
-    "rest_name":  3,
-    "dish_id":    4,
-    "dish_name":  5,
-    "is_best":    6,
-    "score":      7,
-    "sources":    8,
-    "photo":      9,
-    "note":       10,
+    "link_id":        1,
+    "rest_id":        2,
+    "rest_name":      3,
+    "dish_id":        4,
+    "dish_name":      5,
+    "is_best":        6,
+    "score":          7,
+    "sources":        8,
+    "photo":          9,
+    "note":           10,
+    "format_group":   11,   # category for filtering (Noodles, Dim Sum, etc.)
+    "review_summary": 12,   # what reviewers say about this dish here
 }
 
 def get_cell(row, col_1based, default=""):
@@ -183,13 +195,15 @@ def export():
         if rid not in links_by_rest:
             links_by_rest[rid] = []
         links_by_rest[rid].append({
-            "dishId":   get_cell(row, LINK_COLS["dish_id"]),
-            "name":     get_cell(row, LINK_COLS["dish_name"]),
-            "isBest":   parse_bool(get_cell(row, LINK_COLS["is_best"])),
-            "score":    parse_float(get_cell(row, LINK_COLS["score"])),
-            "sources":  parse_list(get_cell(row, LINK_COLS["sources"])),
-            "photoUrl": get_cell(row, LINK_COLS["photo"]),
-            "note":     get_cell(row, LINK_COLS["note"]),
+            "dishId":        get_cell(row, LINK_COLS["dish_id"]),
+            "name":          get_cell(row, LINK_COLS["dish_name"]),
+            "isBest":        parse_bool(get_cell(row, LINK_COLS["is_best"])),
+            "score":         parse_float(get_cell(row, LINK_COLS["score"])),
+            "sources":       parse_list(get_cell(row, LINK_COLS["sources"])),
+            "photoUrl":      get_cell(row, LINK_COLS["photo"]),
+            "note":          get_cell(row, LINK_COLS["note"]),
+            "formatGroup":   get_cell(row, LINK_COLS["format_group"]),
+            "reviewSummary": get_cell(row, LINK_COLS["review_summary"]),
         })
 
     print(f"  Loaded {sum(len(v) for v in links_by_rest.values())} dish links")
@@ -283,6 +297,24 @@ def export():
             "sources": parse_list(get_cell(row, REST_COLS["sources"])),
             "dateAdded":    get_cell(row, REST_COLS["date_added"]) or None,
             "dateVerified": get_cell(row, REST_COLS["date_verified"]) or None,
+            # Enriched dish data (from Google reviews + Claude)
+            "reviewDishes": [d for d in [
+                {
+                    "name":     get_cell(row, REST_COLS["dish1_name"]),
+                    "category": get_cell(row, REST_COLS["dish1_cat"]),
+                    "summary":  get_cell(row, REST_COLS["dish1_summary"]),
+                } if get_cell(row, REST_COLS["dish1_name"]) else None,
+                {
+                    "name":     get_cell(row, REST_COLS["dish2_name"]),
+                    "category": get_cell(row, REST_COLS["dish2_cat"]),
+                    "summary":  get_cell(row, REST_COLS["dish2_summary"]),
+                } if get_cell(row, REST_COLS["dish2_name"]) else None,
+                {
+                    "name":     get_cell(row, REST_COLS["dish3_name"]),
+                    "category": get_cell(row, REST_COLS["dish3_cat"]),
+                    "summary":  get_cell(row, REST_COLS["dish3_summary"]),
+                } if get_cell(row, REST_COLS["dish3_name"]) else None,
+            ] if d],
         }
         restaurants.append(restaurant)
 

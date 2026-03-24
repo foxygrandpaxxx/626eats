@@ -2,51 +2,56 @@
 """
 scripts/research_sweep.py
 ==========================
-Full SGV restaurant research pipeline:
+Full SGV restaurant research pipeline.
 
-  Phase 1 - Google Places API
-    Searches 16 SGV cities with 6 search terms.
-    Fetches full details: hours, phone, photos (4 per restaurant).
+Phase 1 — Google Places discovery
+  Searches all 16 SGV cities × 6 search terms.
+  Fetches full details: hours, phone, address, 4 photos.
+  Extracts dishes from Google review snippets + editorial summary.
 
-  Phase 2 - Yelp Enrichment (Playwright headless browser)
-    Automatically finds each restaurant on Yelp.
-    Extracts: rating, review count, price, photos, dish mentions
-    from review text, and review highlight snippets.
-    Uses ~8s delays and browser resets to avoid bot detection.
+Phase 2 — Yelp enrichment (Playwright headless Chrome)
+  Finds each restaurant on Yelp.
+  Extracts: rating, review count, price, photos, dish mentions.
+  Runs at 10–16s per request with full anti-detection.
+  Falls back gracefully on CAPTCHA — marks for retry.
+  Yelp dishes MERGE with (not replace) Google dishes.
 
-  Phase 3 - Write to Google Sheet
-    Appends new restaurants only (deduplicates by Place ID and name).
-    Flags unclassified restaurants for manual review.
+Phase 3 — Write to Google Sheet
+  Appends new restaurants only (skips duplicates by Place ID or name).
+  Top 3 dishes written to columns AA–AC.
+  Yelp rating + highlights written to Notes.
 
 INSTALL:
   pip install requests gspread google-auth playwright beautifulsoup4
   playwright install chromium
 
 USAGE:
-  python scripts/research_sweep.py
-  python scripts/research_sweep.py --test
+  python scripts/research_sweep.py                    # Full sweep
+  python scripts/research_sweep.py --no-yelp          # Google only (faster, no Playwright)
+  python scripts/research_sweep.py --no-sheet         # Preview without writing
+  python scripts/research_sweep.py --test             # Test API connections
   python scripts/research_sweep.py --cities "Alhambra,San Gabriel"
-  python scripts/research_sweep.py --no-yelp
-  python scripts/research_sweep.py --no-sheet
 
-ENV VARS (required):
-  GOOGLE_API_KEY
-  GOOGLE_SERVICE_ACCOUNT_JSON
-  SPREADSHEET_ID
+ENV VARS:
+  GOOGLE_API_KEY                Required
+  GOOGLE_SERVICE_ACCOUNT_JSON   Required (for Sheet write)
+  SPREADSHEET_ID                Required (for Sheet write)
 """
 
 import os, sys, re, json, time, random, asyncio, argparse, requests
 from datetime import date
 from collections import Counter
 
+# ── Config ─────────────────────────────────────────────────────────────────────
 GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY", "")
 SA_JSON        = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID", "")
 
-YELP_DELAY_MIN      = 6
-YELP_DELAY_MAX      = 11
-MAX_REVIEW_SNIPPETS = 30
+YELP_DELAY_MIN   = 10   # seconds between Yelp requests (longer = safer)
+YELP_DELAY_MAX   = 16
+MAX_REVIEW_TEXT  = 40   # review snippets to scan per restaurant
 
+# ── SGV Cities ─────────────────────────────────────────────────────────────────
 SGV_CITIES = [
     {"city": "Alhambra",         "lat": 34.0953, "lng": -118.1270, "radius": 3000},
     {"city": "Monterey Park",    "lat": 34.0625, "lng": -118.1228, "radius": 3000},
@@ -75,19 +80,32 @@ SEARCH_TERMS = [
     "hot pot restaurant",
 ]
 
+# ── Chinese detection ───────────────────────────────────────────────────────────
 CHINESE_KW = {
-    "dim sum", "cantonese", "sichuan", "szechuan", "shanghainese", "taiwanese",
-    "peking", "beijing", "hunan", "chinese", "mandarin", "hong kong",
-    "dumplings", "noodle", "hot pot", "hotpot", "char siu", "chiu chow",
-    "teochew", "uyghur", "xinjiang", "shaanxi", "yunnan", "fujianese",
-    "fujian", "hakka", "roast duck", "bbq pork",
+    "dim sum","cantonese","sichuan","szechuan","shanghainese","taiwanese",
+    "peking","beijing","hunan","chinese","mandarin","hong kong","dumplings",
+    "noodle","hot pot","hotpot","char siu","chiu chow","teochew","uyghur",
+    "xinjiang","shaanxi","yunnan","fujianese","fujian","hakka","seafood restaurant",
+    "roast duck","bbq pork",
 }
 NON_CHINESE = {
-    "japanese", "korean", "thai", "vietnamese", "indian", "mexican", "pizza",
-    "burger", "sushi", "ramen", "pho", "italian", "french", "sandwich",
-    "wings", "turkish", "persian", "mediterranean", "greek", "american grill",
+    "japanese","korean","thai","vietnamese","indian","mexican","pizza","burger",
+    "sushi","ramen","pho","italian","french","sandwich","wings","turkish",
+    "persian","mediterranean","greek","american grill",
 }
 
+def is_chinese(name, types):
+    text = (" " + name + " " + " ".join(types) + " ").lower()
+    if any(k in text for k in NON_CHINESE):
+        return False
+    if any(k in text for k in CHINESE_KW):
+        return True
+    for ch in name:
+        if "\u4e00" <= ch <= "\u9fff":
+            return True
+    return False
+
+# ── Auto-classify region ────────────────────────────────────────────────────────
 REGION_HINTS = [
     ("dim sum",       "Cantonese",        "Dim Sum & Yum Cha"),
     ("yum cha",       "Cantonese",        "Dim Sum & Yum Cha"),
@@ -109,12 +127,11 @@ REGION_HINTS = [
     ("hunan",         "Hunan",            "Classic Hunan"),
     ("shanghai",      "Shanghainese",     "Shanghai Classic"),
     ("shanghainese",  "Shanghainese",     "Shanghai Classic"),
+    ("xiao long bao", "Shanghainese",     "Shanghai Classic"),
     ("taiwanese",     "Taiwanese",        "Classic Taiwanese"),
     ("beef noodle",   "Taiwanese",        "Classic Taiwanese"),
     ("peking",        "Northern Chinese", "Beijing & Imperial Court"),
     ("beijing",       "Northern Chinese", "Beijing & Imperial Court"),
-    ("dumpling",      "Northern Chinese", "Northeastern / Dongbei"),
-    ("dongbei",       "Northern Chinese", "Northeastern / Dongbei"),
     ("xi'an",         "Northwestern",     "Shaanxi / Xi'an"),
     ("xian",          "Northwestern",     "Shaanxi / Xi'an"),
     ("shaanxi",       "Northwestern",     "Shaanxi / Xi'an"),
@@ -126,51 +143,19 @@ REGION_HINTS = [
     ("hakka",         "Fujianese / Min",  "Hakka"),
     ("fujian",        "Fujianese / Min",  "Fuzhou (Northern Min)"),
     ("hokkien",       "Fujianese / Min",  "Hokkien / Southern Min"),
-    ("hainan",        "Modern & Fusion",  "Hainan / SE Asian-Chinese"),
+    ("hainan",        "Modern & Fusion",  "Hainan / Southeast Asian-Chinese"),
+    ("dumpling",      "Northern Chinese", "Northeastern / Dongbei"),
+    ("dongbei",       "Northern Chinese", "Northeastern / Dongbei"),
     ("noodle",        "Northern Chinese", "Northeastern / Dongbei"),
 ]
-
 PRICE_MAP = {1: "$", 2: "$$", 3: "$$$", 4: "$$$$"}
 
-DISH_VOCABULARY = [
-    "har gow", "siu mai", "char siu bao", "cheung fun", "lo bak go",
-    "turnip cake", "egg tart", "dan tat", "congee", "wonton",
-    "roast duck", "roast pork", "char siu", "peking duck",
-    "dan dan noodles", "mapo tofu", "kung pao chicken", "twice cooked pork",
-    "water boiled fish", "toothpick lamb", "mala", "hot pot", "hotpot",
-    "dry pot", "liangfen", "cold noodles",
-    "xiao long bao", "soup dumplings", "xlb", "sheng jian bao",
-    "pan fried bun", "scallion oil noodles", "lion head meatballs",
-    "beef noodle soup", "lu rou fan", "braised pork rice",
-    "three cup chicken", "oyster vermicelli", "scallion pancake",
-    "beef roll", "guotie", "potsticker", "jianbing",
-    "biang biang", "hand pulled noodles", "lamb noodle",
-    "big plate chicken", "laghman", "cumin lamb", "lamb kebab",
-    "rou jia mo", "yangrou paomo",
-    "bullfrog", "smoked pork", "fish head",
-    "mala broth", "wagyu beef", "beef tripe", "fish balls",
-    "lobster", "crab", "shrimp", "fried rice", "chow mein",
-    "stir fry", "bbq pork", "spare ribs", "dumplings", "noodles",
-    "porridge", "milk tea", "egg waffle", "boba", "sticky rice",
-]
-
-
-def is_chinese(name, types):
-    text = " " + name.lower() + " " + " ".join(types).lower() + " "
-    if any(k in text for k in NON_CHINESE):
-        return False
-    if any(k in text for k in CHINESE_KW):
-        return True
-    return any("\u4e00" <= ch <= "\u9fff" for ch in name)
-
-
 def auto_classify(name, types=None):
-    text = " " + name.lower() + " " + " ".join(types or []).lower() + " "
+    text = (" " + name + " " + " ".join(types or []) + " ").lower()
     for kw, region, sub in REGION_HINTS:
         if kw in text:
             return region, sub
     return "NEEDS CLASSIFICATION", ""
-
 
 def normalize(name):
     n = re.sub(r"[^\w\s]", "", name.lower())
@@ -180,29 +165,93 @@ def normalize(name):
         n = n.replace(s, "").strip()
     return n
 
+def safe_get(row, idx, default=""):
+    """Safely get a cell value from a Sheet row list."""
+    try:
+        return row[idx].strip() if idx < len(row) else default
+    except Exception:
+        return default
 
-def extract_dishes_from_text(text):
+# ── Dish vocabulary for review text mining ──────────────────────────────────────
+DISH_VOCAB = {
+    # Cantonese / Dim Sum
+    "har gow","siu mai","char siu bao","cheung fun","lo bak go","turnip cake",
+    "egg tart","dan tat","congee","wonton","zhaliang","roast duck","roast pork",
+    "char siu","peking duck","pork ribs","spare ribs","chicken feet","tripe",
+    "egg white","mango pudding","sesame ball","century egg",
+    # Sichuan
+    "dan dan noodles","dan dan","mapo tofu","kung pao chicken","twice cooked pork",
+    "water boiled fish","boiled fish","toothpick lamb","mala","dry pot","liangfen",
+    "cold noodles","chongqing noodles","green pepper","fish in chili oil",
+    # Shanghai / Dumplings
+    "xiao long bao","soup dumplings","xlb","sheng jian bao","pan fried bun",
+    "scallion oil noodles","lion head meatball","dongpo pork","stir fried rice cake",
+    "nian gao","rice cake",
+    # Taiwanese
+    "beef noodle soup","beef noodle","lu rou fan","braised pork rice",
+    "three cup chicken","san bei ji","oyster vermicelli","scallion pancake",
+    "pork chop rice","stinky tofu","pineapple cake",
+    # Northern Chinese
+    "beef roll","guotie","potsticker","hand pulled noodles","biang biang",
+    "lamb noodle","jianbing","pancake",
+    # Uyghur / Northwestern
+    "big plate chicken","da pan ji","laghman","cumin lamb","lamb kebab",
+    "rou jia mo","yangrou paomo","naan","pulled noodle",
+    # Hunan
+    "bullfrog","smoked pork","fish head","pickled pepper","red braised pork",
+    # Hot pot
+    "mala broth","wagyu beef","beef tripe","fish balls","hot pot",
+    # Cantonese seafood
+    "lobster","crab","geoduck","abalone","pea shoots","pea sprouts","clam",
+    # Uyghur
+    "lamb chop","skewer","kebab",
+    # General popular
+    "fried rice","chow mein","lo mein","wonton soup","shrimp","dumplings",
+    "noodles","boba","milk tea","egg waffle","fantuan","sticky rice",
+    "soy milk","hainan chicken","chicken rice","soup","porridge",
+}
+
+def extract_dishes(text):
+    """Find dish mentions in text, return top 5 most-mentioned."""
     text_lower = text.lower()
     counts = Counter()
-    for dish in DISH_VOCABULARY:
+    for dish in DISH_VOCAB:
         if dish in text_lower:
             counts[dish] += text_lower.count(dish)
     return [d.title() for d, _ in counts.most_common(5)]
 
+def merge_dishes(primary, secondary):
+    """
+    Merge two dish lists. Primary (Google) dishes come first.
+    Secondary (Yelp) adds any new dishes not already in primary.
+    Returns top 5 unique dishes.
+    """
+    seen = set()
+    merged = []
+    for d in primary + secondary:
+        key = d.lower().strip()
+        if key and key not in seen:
+            seen.add(key)
+            merged.append(d)
+        if len(merged) >= 5:
+            break
+    return merged
 
-# ── Google Places ────────────────────────────────────────────────────────
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PHASE 1 — GOOGLE PLACES (Discovery + Dish extraction)
+# ══════════════════════════════════════════════════════════════════════════════
 
 def g_nearby(lat, lng, radius, keyword, token=None):
+    params = {
+        "location": str(lat) + "," + str(lng),
+        "radius": radius,
+        "keyword": keyword,
+        "type": "restaurant",
+        "key": GOOGLE_API_KEY,
+    }
     if token:
         params = {"pagetoken": token, "key": GOOGLE_API_KEY}
-    else:
-        params = {
-            "location": str(lat) + "," + str(lng),
-            "radius": radius,
-            "keyword": keyword,
-            "type": "restaurant",
-            "key": GOOGLE_API_KEY,
-        }
     r = requests.get(
         "https://maps.googleapis.com/maps/api/place/nearbysearch/json",
         params=params, timeout=15
@@ -210,15 +259,24 @@ def g_nearby(lat, lng, radius, keyword, token=None):
     r.raise_for_status()
     return r.json()
 
-
 def g_details(place_id):
+    """
+    Fetch full place details including reviews and editorial summary.
+    reviews gives up to 5 snippets from real customers mentioning food.
+    editorial_summary is Google's own short description — often mentions dishes.
+    """
     r = requests.get(
         "https://maps.googleapis.com/maps/api/place/details/json",
         params={
             "place_id": place_id,
-            "fields": "place_id,name,formatted_address,geometry,"
-                      "formatted_phone_number,website,opening_hours,"
-                      "price_level,rating,user_ratings_total,photos,business_status",
+            "fields": (
+                "place_id,name,formatted_address,geometry,"
+                "formatted_phone_number,website,opening_hours,"
+                "price_level,rating,user_ratings_total,"
+                "photos,business_status,"
+                "reviews,"           # ← up to 5 review snippets
+                "editorial_summary"  # ← Google's own dish-mentioning blurb
+            ),
             "key": GOOGLE_API_KEY,
         },
         timeout=15
@@ -226,44 +284,76 @@ def g_details(place_id):
     r.raise_for_status()
     return r.json().get("result", {})
 
+def g_photo_url(ref, width=1200):
+    return (
+        "https://maps.googleapis.com/maps/api/place/photo"
+        "?maxwidth=" + str(width) +
+        "&photo_reference=" + ref +
+        "&key=" + GOOGLE_API_KEY
+    )
 
-def g_photo_url(ref, w=1200):
-    return ("https://maps.googleapis.com/maps/api/place/photo"
-            "?maxwidth=" + str(w) +
-            "&photo_reference=" + ref +
-            "&key=" + GOOGLE_API_KEY)
+def extract_dishes_from_google(details):
+    """
+    Extract dish mentions from Google Places data:
+    1. editorial_summary — Google's own description
+    2. reviews — up to 5 customer review snippets
+    Returns top 5 dishes ranked by mention frequency.
+    """
+    texts = []
 
+    # Editorial summary (very high signal — Google explicitly describes the restaurant)
+    summary = details.get("editorial_summary", {})
+    if summary:
+        overview = summary.get("overview", "")
+        if overview:
+            texts.append(overview)
+            texts.append(overview)  # Weight it double — highest quality signal
+
+    # Customer reviews (each is a short snippet Google shows in search results)
+    for review in details.get("reviews", []):
+        text = review.get("text", "").strip()
+        if text:
+            texts.append(text)
+
+    if not texts:
+        return []
+
+    combined = " ".join(texts)
+    return extract_dishes(combined)
 
 def collect_google(cities):
+    """Phase 1a: Discover all Chinese restaurants via nearby search."""
     seen, results = set(), []
     for ci in cities:
-        print("  [" + ci["city"] + "] searching...")
+        print("  [" + ci["city"] + "]", end=" ", flush=True)
+        city_count = 0
         for term in SEARCH_TERMS:
             token, page = None, 0
             while True:
                 try:
                     data = g_nearby(ci["lat"], ci["lng"], ci["radius"], term, token)
                 except Exception as e:
-                    print("    error (" + term + "): " + str(e))
+                    print("\n    Error (" + term + "): " + str(e))
                     break
                 for p in data.get("results", []):
                     pid = p.get("place_id")
                     if not pid or pid in seen:
                         continue
-                    if p.get("business_status") in ("PERMANENTLY_CLOSED","CLOSED_TEMPORARILY"):
+                    if p.get("business_status") in (
+                            "PERMANENTLY_CLOSED", "CLOSED_TEMPORARILY"):
                         continue
                     name  = p.get("name", "")
                     types = p.get("types", [])
                     if not is_chinese(name, types):
                         continue
                     seen.add(pid)
-                    loc = (p.get("geometry") or {}).get("location", {})
+                    city_count += 1
                     results.append({
                         "google_place_id": pid,
                         "name":  name,
                         "city":  ci["city"],
-                        "lat":   loc.get("lat"),
-                        "lng":   loc.get("lng"),
+                        "lat":   p.get("geometry", {}).get("location", {}).get("lat"),
+                        "lng":   p.get("geometry", {}).get("location", {}).get("lng"),
                         "price_level": p.get("price_level"),
                         "status": "OPEN",
                     })
@@ -272,473 +362,1114 @@ def collect_google(cities):
                 if not token or page >= 3:
                     break
                 time.sleep(2)
+        print(str(city_count) + " found")
     return results
 
-
 def enrich_google_details(restaurants):
+    """
+    Phase 1b: Fetch full details for each restaurant.
+    This is where we get hours, phone, photos, reviews, and editorial summary.
+    Dishes are extracted from review text and editorial summary here.
+    """
     enriched = []
     total = len(restaurants)
+    dish_found = 0
+
     for i, r in enumerate(restaurants):
-        if i % 25 == 0:
-            print("    details " + str(i+1) + "/" + str(total) + "...")
+        pid = r["google_place_id"]
+        if i % 20 == 0:
+            print("    Details " + str(i+1) + "/" + str(total) +
+                  " (dishes found: " + str(dish_found) + ")...")
         try:
-            d = g_details(r["google_place_id"])
-            texts = (d.get("opening_hours") or {}).get("weekday_text", [])
+            d = g_details(pid)
+
+            # Hours
+            texts = d.get("opening_hours", {}).get("weekday_text", [])
+            days  = ["monday","tuesday","wednesday","thursday",
+                     "friday","saturday","sunday"]
             hours = {}
-            for day in ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"]:
+            for day in days:
                 m = [t for t in texts if t.lower().startswith(day)]
-                hours[day[:3]] = m[0].split(": ",1)[1] if m else None
-            refs = [p["photo_reference"] for p in d.get("photos",[])[:4]
+                hours[day[:3]] = m[0].split(": ", 1)[1] if m else None
+
+            # Photos
+            refs = [p["photo_reference"]
+                    for p in d.get("photos", [])[:4]
                     if p.get("photo_reference")]
             urls = [g_photo_url(ref) for ref in refs]
+
+            # ── Dish extraction from Google data ─────────────────────────
+            google_dishes = extract_dishes_from_google(d)
+            if google_dishes:
+                dish_found += 1
+
             r.update({
-                "address":       d.get("formatted_address", r.get("city","")),
-                "phone":         d.get("formatted_phone_number",""),
-                "website":       d.get("website",""),
-                "price_level":   d.get("price_level", r.get("price_level")),
-                "hours":         hours,
-                "photo_exterior": urls[0] if len(urls)>0 else "",
-                "photo_food1":    urls[1] if len(urls)>1 else "",
-                "photo_food2":    urls[2] if len(urls)>2 else "",
-                "photo_interior": urls[3] if len(urls)>3 else "",
+                "address":        d.get("formatted_address", r.get("city", "")),
+                "phone":          d.get("formatted_phone_number", ""),
+                "website":        d.get("website", ""),
+                "price_level":    d.get("price_level", r.get("price_level")),
                 "google_rating":  d.get("rating"),
                 "review_count":   d.get("user_ratings_total"),
+                "hours":          hours,
+                "photo_exterior": urls[0] if len(urls) > 0 else "",
+                "photo_food1":    urls[1] if len(urls) > 1 else "",
+                "photo_food2":    urls[2] if len(urls) > 2 else "",
+                "photo_interior": urls[3] if len(urls) > 3 else "",
+                "google_dishes":  google_dishes,   # ← NEW: dishes from Google
             })
         except Exception as e:
-            print("    warn (" + r["name"] + "): " + str(e))
+            print("    Warn (" + r["name"] + "): " + str(e))
             r.setdefault("hours", {})
+            r.setdefault("google_dishes", [])
             for k in ["photo_exterior","photo_food1","photo_food2","photo_interior"]:
                 r.setdefault(k, "")
         enriched.append(r)
-        time.sleep(0.06)
+        time.sleep(0.08)  # ~12 req/sec, well within quota
+
+    print("  Google dish extraction: " + str(dish_found) + "/" + str(total) +
+          " restaurants got dishes from Google")
     return enriched
 
 
-# ── Yelp Playwright ──────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# PHASE 2 — YELP ENRICHMENT (Playwright, dishes merge with Google data)
+# ══════════════════════════════════════════════════════════════════════════════
+
+# User agents to rotate — makes each session look like a different browser
+USER_AGENTS = [
+    ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"),
+    ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+     "AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15"),
+    ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"),
+    ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+     "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"),
+]
+
+VIEWPORTS = [
+    {"width": 1280, "height": 900},
+    {"width": 1440, "height": 900},
+    {"width": 1366, "height": 768},
+    {"width": 1920, "height": 1080},
+]
+
+async def new_browser_context(pw):
+    """Create a new browser + context with randomised fingerprint."""
+    browser = await pw.chromium.launch(
+        headless=True,
+        args=[
+            "--no-sandbox",
+            "--disable-blink-features=AutomationControlled",
+            "--disable-dev-shm-usage",
+            "--disable-infobars",
+            "--disable-extensions",
+        ]
+    )
+    ua = random.choice(USER_AGENTS)
+    vp = random.choice(VIEWPORTS)
+    context = await browser.new_context(
+        viewport=vp,
+        user_agent=ua,
+        locale="en-US",
+        timezone_id="America/Los_Angeles",
+        java_script_enabled=True,
+    )
+    # Mask all common automation signals
+    await context.add_init_script("""
+        Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+        Object.defineProperty(navigator, 'plugins', {get: () => [1,2,3,4,5]});
+        Object.defineProperty(navigator, 'languages', {get: () => ['en-US','en']});
+        window.chrome = {runtime: {}, loadTimes: function(){}, csi: function(){}};
+        Object.defineProperty(navigator, 'permissions', {
+            get: () => ({query: () => Promise.resolve({state: 'granted'})})
+        });
+    """)
+    return browser, context
 
 async def yelp_find_business(page, name, city):
-    url = ("https://www.yelp.com/search"
-           "?find_desc=" + requests.utils.quote(name) +
-           "&find_loc=" + requests.utils.quote(city + " CA"))
+    """
+    Search Yelp for a restaurant. Returns (url, biz_id) or (None, None).
+    Detects CAPTCHA and returns None immediately rather than hanging.
+    """
+    search_url = (
+        "https://www.yelp.com/search"
+        "?find_desc=" + requests.utils.quote(name) +
+        "&find_loc=" + requests.utils.quote(city + " CA")
+    )
     try:
-        await page.goto(url, wait_until="domcontentloaded", timeout=20000)
-        await page.wait_for_timeout(random.randint(1500, 2500))
+        await page.goto(search_url, wait_until="domcontentloaded", timeout=20000)
+        # Human-like pause before reading the page
+        await page.wait_for_timeout(random.randint(1500, 2800))
+
         content = await page.content()
-        if "captcha" in content.lower() or "robot" in content.lower():
-            print("    [CAPTCHA] " + name)
-            return None, None
+
+        # Detect CAPTCHA / bot challenge
+        captcha_signals = [
+            "captcha", "unusual traffic", "are you a robot",
+            "access to this page has been", "please verify"
+        ]
+        if any(s in content.lower() for s in captcha_signals):
+            return None, None  # Caller marks as captcha
+
+        # Find first /biz/ link that looks like a business page
         links = await page.query_selector_all('a[href*="/biz/"]')
         for link in links:
             href = await link.get_attribute("href")
             if not href or "/biz/" not in href:
                 continue
-            biz = href.split("/biz/")[1].split("?")[0].strip("/")
-            if biz and "/" not in biz:
-                if href.startswith("/"):
-                    href = "https://www.yelp.com" + href
-                return href, biz
+            biz_part = href.split("/biz/")[1].split("?")[0].strip("/")
+            if not biz_part or "/" in biz_part:
+                continue  # Skip categories/collections
+            full_url = "https://www.yelp.com/biz/" + biz_part
+            return full_url, biz_part
+
         return None, None
+
     except Exception as e:
-        print("    [search error] " + name + ": " + type(e).__name__)
         return None, None
 
-
-async def yelp_scrape_details(page, url):
+async def yelp_scrape_business(page, url):
+    """
+    Scrape a Yelp business page.
+    Returns dict with rating, review_count, price, photos, dishes, highlights.
+    Returns None on CAPTCHA.
+    """
     from bs4 import BeautifulSoup
+
     result = {
-        "yelp_rating": None, "yelp_review_count": None,
-        "yelp_price": None, "yelp_photos": [],
-        "yelp_dishes": [], "yelp_highlights": [],
+        "yelp_rating":       None,
+        "yelp_review_count": None,
+        "yelp_price":        None,
+        "yelp_photos":       [],
+        "yelp_dishes":       [],
+        "yelp_highlights":   [],
     }
+
     try:
         await page.goto(url, wait_until="domcontentloaded", timeout=25000)
-        await page.wait_for_timeout(random.randint(2000, 3500))
-        soup = BeautifulSoup(await page.content(), "html.parser")
+        await page.wait_for_timeout(random.randint(2500, 4000))
+
+        html = await page.content()
+
+        # Check for CAPTCHA on business page too
+        if any(s in html.lower() for s in ["captcha","unusual traffic","are you a robot"]):
+            return None  # Signal CAPTCHA to caller
+
+        soup = BeautifulSoup(html, "html.parser")
 
         # Rating
-        el = soup.find(attrs={"aria-label": re.compile(r"[\d.]+ star rating")})
-        if el:
-            m = re.search(r"([\d.]+) star", el.get("aria-label",""))
+        for el in soup.find_all(attrs={"aria-label": True}):
+            m = re.search(r"([\d.]+) star rating", el.get("aria-label", ""))
             if m:
                 result["yelp_rating"] = float(m.group(1))
+                break
 
         # Review count
-        rv = soup.find(string=re.compile(r"\d+\s+reviews?", re.I))
-        if rv:
-            m = re.search(r"(\d[\d,]*)\s+review", str(rv), re.I)
+        for el in soup.find_all(string=re.compile(r"\d[\d,]*\s+reviews?", re.I)):
+            m = re.search(r"([\d,]+)\s+review", str(el), re.I)
             if m:
-                result["yelp_review_count"] = int(m.group(1).replace(",",""))
+                result["yelp_review_count"] = int(m.group(1).replace(",", ""))
+                break
 
         # Price
-        spans = soup.find_all("span", string=re.compile(r"^\$+$"))
-        if spans:
-            result["yelp_price"] = spans[0].get_text(strip=True)
+        for el in soup.find_all(string=re.compile(r"^\$+$")):
+            result["yelp_price"] = el.strip()
+            break
 
-        # Photos (upgrade thumbnails to full-size)
+        # Photos
         photos = []
         for img in soup.find_all("img", src=re.compile(r"yelpcdn\.com")):
-            src = img.get("src","")
-            src = re.sub(r"/(ms|ss|ls)\.", "/o.", src)
-            if src not in photos and "user_photos" not in src:
+            src = img.get("src", "")
+            src = re.sub(r"/(ms|ss|ls|s|m)\.", "/o.", src)
+            if src and src not in photos and "avatar" not in src:
                 photos.append(src)
             if len(photos) >= 4:
                 break
         result["yelp_photos"] = photos
 
-        # Dish extraction from review text
-        texts = []
-        for p in soup.find_all("p", {"lang": "en"}):
-            texts.append(p.get_text(" ", strip=True))
-        for el in soup.find_all(class_=re.compile(r"review|comment", re.I)):
+        # Review text for dish extraction
+        chunks = []
+        for el in soup.find_all("p", {"lang": "en"}):
+            chunks.append(el.get_text(" ", strip=True))
+        for el in soup.find_all("span", class_=re.compile(r"raw__", re.I)):
             t = el.get_text(" ", strip=True)
-            if len(t) > 30:
-                texts.append(t)
-        result["yelp_dishes"] = extract_dishes_from_text(" ".join(texts[:MAX_REVIEW_SNIPPETS]))
+            if len(t) > 40:
+                chunks.append(t)
+        result["yelp_dishes"] = extract_dishes(" ".join(chunks[:MAX_REVIEW_TEXT]))
 
-        # Review highlights
+        # Review highlights (first sentence of top reviews)
         highlights = []
-        for el in soup.find_all(["blockquote","q"]):
-            t = el.get_text(" ", strip=True)
-            if 20 < len(t) < 200:
-                highlights.append(t)
-        for p in soup.find_all("p", {"lang":"en"})[:3]:
-            t = p.get_text(" ", strip=True)
-            s = re.split(r"[.!?]", t)
-            if s and len(s[0]) > 20:
-                highlights.append(s[0].strip() + ".")
+        for p in soup.find_all("p", {"lang": "en"})[:5]:
+            text = p.get_text(" ", strip=True)
+            if len(text) < 30:
+                continue
+            sent = re.split(r"(?<=[.!?])\s", text)[0].strip()
+            if 25 < len(sent) < 180:
+                highlights.append(sent)
         result["yelp_highlights"] = highlights[:3]
 
     except Exception as e:
-        print("    [scrape error] " + url + ": " + str(e))
+        pass  # Return partial result, not None (None = CAPTCHA)
+
     return result
 
-
 async def enrich_with_yelp(restaurants):
+    """
+    Phase 2: Yelp enrichment with anti-detection and graceful CAPTCHA handling.
+    Yelp dishes MERGE with Google dishes (Google takes priority).
+    Tracks CAPTCHA hits and reports them.
+    """
     try:
         from playwright.async_api import async_playwright
     except ImportError:
-        print("\nWARNING: playwright not installed.")
-        print("  pip install playwright && playwright install chromium")
+        print("\nWARNING: playwright not installed — skipping Yelp enrichment")
+        print("  Fix: pip install playwright && playwright install chromium\n")
         return restaurants
 
-    total = len(restaurants)
-    est = total * (YELP_DELAY_MIN + YELP_DELAY_MAX) // 2 // 60
-    print("\nPhase 2 - Yelp enrichment (" + str(total) + " restaurants, ~" + str(est) + " min)\n")
+    total      = len(restaurants)
+    found      = 0
+    not_found  = 0
+    captcha    = 0
+    dish_added = 0
+
+    est_min = total * (YELP_DELAY_MIN + YELP_DELAY_MAX) // 2 // 60
+    print("\nPhase 2 — Yelp enrichment")
+    print("  Restaurants: " + str(total))
+    print("  Delay: " + str(YELP_DELAY_MIN) + "-" + str(YELP_DELAY_MAX) + "s per request")
+    print("  Estimated: ~" + str(est_min) + " minutes")
+    print("  Note: CAPTCHA hits are skipped automatically\n")
 
     enriched = []
-    found = not_found = 0
 
     async with async_playwright() as pw:
-        def make_browser_context(browser):
-            ctx = browser.new_context(
-                viewport={"width":1280,"height":900},
-                user_agent=(
-                    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) "
-                    "Chrome/120.0.0.0 Safari/537.36"
-                ),
-                locale="en-US",
-                timezone_id="America/Los_Angeles",
-            )
-            return ctx
-
-        browser = await pw.chromium.launch(
-            headless=True,
-            args=["--no-sandbox","--disable-blink-features=AutomationControlled","--disable-dev-shm-usage"]
-        )
-        context = await make_browser_context(browser)
-        await context.add_init_script(
-            "Object.defineProperty(navigator,'webdriver',{get:()=>undefined});"
-            "window.chrome={runtime:{}};"
-        )
+        browser, context = await new_browser_context(pw)
         page = await context.new_page()
 
-        # Warm up
+        # Warm up — visit Yelp homepage before searching
         try:
-            await page.goto("https://www.yelp.com", wait_until="domcontentloaded", timeout=15000)
-            await page.wait_for_timeout(random.randint(1500, 2500))
+            await page.goto("https://www.yelp.com",
+                            wait_until="domcontentloaded", timeout=15000)
+            await page.wait_for_timeout(random.randint(2000, 3500))
         except Exception:
             pass
 
         for i, r in enumerate(restaurants):
-            name = r.get("name","")
-            city = r.get("city","")
-            print("  [" + str(i+1) + "/" + str(total) + "] " + name + " - " + city)
+            name = r.get("name", "")
+            city = r.get("city", "")
+            google_dishes = r.get("google_dishes", [])
 
+            print("  [" + str(i+1) + "/" + str(total) + "] " +
+                  name + " (" + city + ")", end=" ... ", flush=True)
+
+            # Step 1: Find on Yelp
             url, biz_id = await yelp_find_business(page, name, city)
 
-            if not url:
-                not_found += 1
+            if url is None and biz_id is None:
+                # Could be CAPTCHA or just not found — check page content
+                try:
+                    content = await page.content()
+                    hit_captcha = any(s in content.lower() for s in
+                                     ["captcha","unusual traffic","are you a robot"])
+                except Exception:
+                    hit_captcha = False
+
+                if hit_captcha:
+                    print("CAPTCHA — resetting browser")
+                    captcha += 1
+                    # Reset browser completely on CAPTCHA
+                    try:
+                        await browser.close()
+                    except Exception:
+                        pass
+                    await asyncio.sleep(random.uniform(8, 15))
+                    browser, context = await new_browser_context(pw)
+                    page = await context.new_page()
+                    # Re-warm after reset
+                    try:
+                        await page.goto("https://www.yelp.com",
+                                        wait_until="domcontentloaded", timeout=15000)
+                        await page.wait_for_timeout(random.randint(3000, 5000))
+                    except Exception:
+                        pass
+                else:
+                    print("not found on Yelp")
+                    not_found += 1
+
                 r["yelp_id"] = ""
+                r["yelp_dishes"] = []
+                # Keep Google dishes as the dish source
+                r["final_dishes"] = google_dishes[:3]
                 enriched.append(r)
-                await page.wait_for_timeout(random.randint(2000, 3000))
+                await page.wait_for_timeout(random.randint(2000, 3500))
                 continue
 
             r["yelp_id"] = biz_id or ""
+
+            # Step 2: Scrape business page
             await page.wait_for_timeout(random.randint(1000, 2000))
-            yd = await yelp_scrape_details(page, url)
+            yd = await yelp_scrape_business(page, url)
+
+            if yd is None:
+                # CAPTCHA on business page
+                print("CAPTCHA on biz page — resetting")
+                captcha += 1
+                try:
+                    await browser.close()
+                except Exception:
+                    pass
+                await asyncio.sleep(random.uniform(8, 15))
+                browser, context = await new_browser_context(pw)
+                page = await context.new_page()
+                try:
+                    await page.goto("https://www.yelp.com",
+                                    wait_until="domcontentloaded", timeout=15000)
+                    await page.wait_for_timeout(random.randint(3000, 5000))
+                except Exception:
+                    pass
+                r["final_dishes"] = google_dishes[:3]
+                enriched.append(r)
+                continue
+
+            # Merge: Google dishes first, Yelp adds anything new
+            yelp_dishes = yd.get("yelp_dishes", [])
+            final_dishes = merge_dishes(google_dishes, yelp_dishes)
+            if len(final_dishes) > len(google_dishes):
+                dish_added += 1
 
             r.update({
                 "yelp_rating":       yd["yelp_rating"],
                 "yelp_review_count": yd["yelp_review_count"],
                 "yelp_price":        yd["yelp_price"],
-                "yelp_dishes":       yd["yelp_dishes"],
+                "yelp_dishes":       yelp_dishes,
                 "yelp_highlights":   yd["yelp_highlights"],
+                "final_dishes":      final_dishes,
             })
 
-            yp = yd.get("yelp_photos", [])
-            if not r.get("photo_food1")    and len(yp)>0: r["photo_food1"]    = yp[0]
-            if not r.get("photo_food2")    and len(yp)>1: r["photo_food2"]    = yp[1]
-            if not r.get("photo_exterior") and len(yp)>2: r["photo_exterior"] = yp[2]
+            # Fill photo gaps: use Yelp photos where Google has none
+            yelp_ph = yd.get("yelp_photos", [])
+            if not r.get("photo_food1")    and len(yelp_ph) > 0:
+                r["photo_food1"]    = yelp_ph[0]
+            if not r.get("photo_food2")    and len(yelp_ph) > 1:
+                r["photo_food2"]    = yelp_ph[1]
+            if not r.get("photo_exterior") and len(yelp_ph) > 2:
+                r["photo_exterior"] = yelp_ph[2]
+            if not r.get("photo_interior") and len(yelp_ph) > 3:
+                r["photo_interior"] = yelp_ph[3]
+
+            # Yelp price as fallback
             if not r.get("price_level") and yd.get("yelp_price"):
                 r["yelp_price_str"] = yd["yelp_price"]
 
             found += 1
+
+            dishes_preview = ", ".join(final_dishes[:3]) or "none"
+            rating_str = str(yd["yelp_rating"]) if yd["yelp_rating"] else "n/a"
+            print("★" + rating_str + " | dishes: " + dishes_preview)
+
             enriched.append(r)
 
-            dishes_str = ", ".join(yd["yelp_dishes"][:3]) or "none"
+            # Pacing — longer delays = fewer CAPTCHAs
             delay = random.uniform(YELP_DELAY_MIN, YELP_DELAY_MAX)
-            print("    " + str(biz_id) + " | rating=" + str(yd["yelp_rating"]) +
-                  " | dishes=" + dishes_str + " | next in " + str(round(delay)) + "s")
             await page.wait_for_timeout(int(delay * 1000))
 
-            # Browser session reset every 50
-            if (i+1) % 50 == 0 and i < len(restaurants)-1:
-                print("  Resetting browser session...")
-                await browser.close()
-                browser = await pw.chromium.launch(
-                    headless=True,
-                    args=["--no-sandbox","--disable-blink-features=AutomationControlled"]
-                )
-                context = await make_browser_context(browser)
-                await context.add_init_script(
-                    "Object.defineProperty(navigator,'webdriver',{get:()=>undefined});"
-                )
+            # Reset browser every 40 restaurants to avoid fingerprint buildup
+            if (i + 1) % 40 == 0 and i < total - 1:
+                print("  Rotating browser session...")
+                try:
+                    await browser.close()
+                except Exception:
+                    pass
+                await asyncio.sleep(random.uniform(3, 6))
+                browser, context = await new_browser_context(pw)
                 page = await context.new_page()
-                await page.goto("https://www.yelp.com", wait_until="domcontentloaded", timeout=15000)
-                await page.wait_for_timeout(3000)
+                try:
+                    await page.goto("https://www.yelp.com",
+                                    wait_until="domcontentloaded", timeout=15000)
+                    await page.wait_for_timeout(random.randint(2000, 4000))
+                except Exception:
+                    pass
 
-        await browser.close()
+        try:
+            await browser.close()
+        except Exception:
+            pass
 
-    print("\n  Yelp done: " + str(found) + " found, " + str(not_found) + " not found")
+    print("\n  Yelp enrichment complete:")
+    print("    Found on Yelp:   " + str(found) + "/" + str(total))
+    print("    Not found:       " + str(not_found))
+    print("    CAPTCHA hits:    " + str(captcha))
+    print("    Yelp added new dishes to: " + str(dish_added) + " restaurants")
     return enriched
 
 
-# ── Google Sheet write ───────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# PHASE 3 — WRITE TO GOOGLE SHEET
+# ══════════════════════════════════════════════════════════════════════════════
 
 def sheets_client():
     try:
         import gspread
         from google.oauth2.service_account import Credentials
     except ImportError:
-        sys.exit("pip install gspread google-auth")
+        sys.exit("Run: pip install gspread google-auth")
     creds = Credentials.from_service_account_info(
         json.loads(SA_JSON),
-        scopes=["https://spreadsheets.google.com/feeds","https://www.googleapis.com/auth/drive"]
+        scopes=[
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
+        ]
     )
     return gspread.authorize(creds)
 
-
 def write_to_sheet(restaurants):
     client = sheets_client()
-    ws = client.open_by_key(SPREADSHEET_ID).worksheet("Restaurants")
-    existing = ws.get_all_values()
+    ws     = client.open_by_key(SPREADSHEET_ID).worksheet("Restaurants")
 
+    existing      = ws.get_all_values()
+    DATA_START    = 3
     existing_pids  = set()
     existing_names = set()
-    for row in existing[3:]:
+    for row in existing[DATA_START:]:
         if len(row) >= 34 and row[33].strip():
             existing_pids.add(row[33].strip())
         if len(row) >= 2 and row[1].strip():
             existing_names.add(normalize(row[1].strip()))
 
-    today  = date.today().isoformat()
-    to_add = []
+    today   = date.today().isoformat()
+    to_add  = []
     skipped = 0
 
     for r in restaurants:
-        pid = r.get("google_place_id","")
-        if (pid and pid in existing_pids) or normalize(r.get("name","")) in existing_names:
-            skipped += 1
-            continue
+        pid = r.get("google_place_id", "")
+        if pid and pid in existing_pids:
+            skipped += 1; continue
+        if normalize(r.get("name", "")) in existing_names:
+            skipped += 1; continue
 
-        region, sub = auto_classify(r.get("name",""))
-        price = r.get("yelp_price_str") or PRICE_MAP.get(r.get("price_level"),"$$")
-        hours = r.get("hours") or {}
-        addr  = r.get("address","")
+        region, sub = auto_classify(r.get("name", ""))
+        price = (r.get("yelp_price_str") or r.get("yelp_price")
+                 or PRICE_MAP.get(r.get("price_level"), "$$"))
+        hours = r.get("hours", {})
+
+        addr   = r.get("address", "")
         street = addr.split(",")[0].strip() if "," in addr else addr
-        zm = re.search(r"\b(9\d{4})\b", addr)
-        zip_cd = zm.group(1) if zm else ""
+        zip_m  = re.search(r"\b(9\d{4})\b", addr)
+        zip_cd = zip_m.group(1) if zip_m else ""
 
-        yd = r.get("yelp_dishes") or []
-        hl = r.get("yelp_highlights") or []
-        rating_str = ""
+        # Use final_dishes (Google + Yelp merged) for columns AA-AC
+        dishes = r.get("final_dishes") or r.get("google_dishes") or r.get("yelp_dishes") or []
+        dish1 = dishes[0] if len(dishes) > 0 else ""
+        dish2 = dishes[1] if len(dishes) > 1 else ""
+        dish3 = dishes[2] if len(dishes) > 2 else ""
+
+        # Build notes from Yelp rating + highlights
+        parts = []
         if r.get("yelp_rating"):
-            rating_str = "Yelp " + str(r["yelp_rating"])
-            if r.get("yelp_review_count"):
-                rating_str += " (" + str(r["yelp_review_count"]) + " reviews)"
+            cnt = r.get("yelp_review_count", "")
+            parts.append("Yelp {:.1f}".format(r["yelp_rating"]) +
+                         (" (" + str(cnt) + " reviews)" if cnt else ""))
+        highlights = r.get("yelp_highlights", [])
+        if highlights:
+            parts.append(highlights[0])
+        notes = " — ".join(parts)
 
-        notes   = " -- ".join(filter(None, [rating_str, " | ".join(hl[:2])]))
-        sources = "Google Maps" + (",Yelp" if r.get("yelp_id") else "")
+        sources = "Google Maps"
+        if r.get("yelp_id"):
+            sources += ",Yelp"
 
-        to_add.append([
-            "R" + str(5000+len(to_add)).zfill(4), # A
-            r.get("name",""),                       # B
-            "",                                     # C Chinese name
-            "OPEN",                                 # D
-            street,                                 # E
-            r.get("city",""),                       # F
-            zip_cd,                                 # G
-            r.get("lat") or "",                     # H
-            r.get("lng") or "",                     # I
-            region,                                 # J
-            sub,                                    # K
-            "", "",                                 # L M
-            "",                                     # N
-            price,                                  # O
-            r.get("phone",""),                      # P
-            r.get("website",""),                    # Q
-            "FALSE","FALSE",                        # R S
-            hours.get("mon") or "",                 # T
-            hours.get("tue") or "",                 # U
-            hours.get("wed") or "",                 # V
-            hours.get("thu") or "",                 # W
-            hours.get("fri") or "",                 # X
-            hours.get("sat") or "",                 # Y
-            hours.get("sun") or "",                 # Z
-            yd[0] if len(yd)>0 else "",             # AA
-            yd[1] if len(yd)>1 else "",             # AB
-            yd[2] if len(yd)>2 else "",             # AC
-            r.get("photo_exterior",""),             # AD
-            r.get("photo_food1",""),                # AE
-            r.get("photo_food2",""),                # AF
-            r.get("photo_interior",""),             # AG
-            pid,                                    # AH
-            r.get("yelp_id",""),                    # AI
-            "",                                     # AJ
-            notes,                                  # AK
-            sources,                                # AL
-            today, today,                           # AM AN
-            "Research Script",                      # AO
-        ])
+        row = [
+            "R" + str(5000 + len(to_add)).zfill(4),  # A  ID
+            r.get("name", ""),              # B
+            "",                             # C  Chinese name
+            "OPEN",                         # D
+            street,                         # E
+            r.get("city", ""),              # F
+            zip_cd,                         # G
+            r.get("lat") or "",             # H
+            r.get("lng") or "",             # I
+            region,                         # J
+            sub,                            # K
+            "",                             # L  Province
+            "",                             # M  Secondary regions
+            "",                             # N  Category
+            price,                          # O
+            r.get("phone", ""),             # P
+            r.get("website", ""),           # Q
+            "FALSE",                        # R  Halal
+            "FALSE",                        # S  Michelin
+            hours.get("mon", "") or "",     # T
+            hours.get("tue", "") or "",     # U
+            hours.get("wed", "") or "",     # V
+            hours.get("thu", "") or "",     # W
+            hours.get("fri", "") or "",     # X
+            hours.get("sat", "") or "",     # Y
+            hours.get("sun", "") or "",     # Z
+            dish1,                          # AA
+            dish2,                          # AB
+            dish3,                          # AC
+            r.get("photo_exterior", ""),    # AD
+            r.get("photo_food1", ""),       # AE
+            r.get("photo_food2", ""),       # AF
+            r.get("photo_interior", ""),    # AG
+            pid,                            # AH  Google Place ID
+            r.get("yelp_id", ""),           # AI  Yelp ID
+            "",                             # AJ  Dianping
+            notes,                          # AK
+            sources,                        # AL
+            today,                          # AM  Date Added
+            today,                          # AN  Date Verified
+            "Research Script",              # AO
+        ]
+        to_add.append(row)
 
     if to_add:
-        for start in range(0, len(to_add), 100):
-            chunk = to_add[start:start+100]
+        BATCH = 100
+        for start in range(0, len(to_add), BATCH):
+            chunk = to_add[start:start + BATCH]
             ws.append_rows(chunk, value_input_option="USER_ENTERED")
-            print("    wrote " + str(start+1) + "-" + str(start+len(chunk)))
+            print("    Wrote rows " + str(start+1) + "–" + str(start+len(chunk)))
             time.sleep(1)
 
-    print("  Added " + str(len(to_add)) + " | skipped " + str(skipped))
+    print("\n  Added:   " + str(len(to_add)) + " new restaurants")
+    print("  Skipped: " + str(skipped) + " (already in sheet)")
     return len(to_add)
 
 
-# ── Test helpers ─────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# TEST + MAIN
+# ══════════════════════════════════════════════════════════════════════════════
 
-def test_google_api():
-    print("Testing Google Places API...")
+def test_google():
+    print("Google Places API...", end=" ")
     if not GOOGLE_API_KEY:
-        print("  ERROR: GOOGLE_API_KEY not set")
-        return False
+        print("ERROR: GOOGLE_API_KEY not set"); return False
     try:
+        # Test nearby search
         data = g_nearby(34.0831, -118.1286, 300, "restaurant")
-        print("  OK - " + str(len(data.get("results",[]))) + " results")
+        n = len(data.get("results", []))
+        # Test details with reviews field on a known SGV place
+        detail = g_details("ChIJaYS_w5vXwoARopWVJyXxpFE")  # Chengdu Taste
+        has_reviews = bool(detail.get("reviews"))
+        has_summary = bool(detail.get("editorial_summary"))
+        print("OK (" + str(n) + " nearby results, " +
+              "reviews=" + str(has_reviews) + ", " +
+              "editorial_summary=" + str(has_summary) + ")")
         return True
     except Exception as e:
-        print("  FAILED: " + str(e))
-        return False
+        print("FAILED: " + str(e)); return False
 
-
-async def test_playwright_yelp():
-    print("Testing Playwright + Yelp...")
+async def test_yelp():
+    print("Playwright + Yelp...", end=" ")
     try:
         from playwright.async_api import async_playwright
     except ImportError:
-        print("  ERROR: playwright not installed")
+        print("ERROR: playwright not installed")
+        print("  Fix: pip install playwright && playwright install chromium")
         return False
     try:
         async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=True)
-            page = await browser.new_page()
-            await page.goto("https://www.yelp.com/biz/chengdu-taste-alhambra-2",
-                            wait_until="domcontentloaded", timeout=20000)
-            ok = "chengdu" in (await page.content()).lower()
+            browser, context = await new_browser_context(pw)
+            page = await context.new_page()
+            await page.goto(
+                "https://www.yelp.com/biz/chengdu-taste-alhambra-2",
+                wait_until="domcontentloaded", timeout=20000
+            )
+            content = await page.content()
             await browser.close()
-            print("  " + ("OK" if ok else "WARN - content unexpected"))
+        if any(s in content.lower() for s in
+               ["captcha","unusual traffic","are you a robot"]):
+            print("CAPTCHA on test — Yelp is blocking. Use --no-yelp for now.")
+            return False
+        if "chengdu" in content.lower():
+            print("OK (Yelp page loaded, no CAPTCHA)")
             return True
+        print("WARN (loaded but unexpected content)")
+        return True
     except Exception as e:
-        print("  FAILED: " + str(e))
-        return False
+        print("FAILED: " + str(e)); return False
 
+# ══════════════════════════════════════════════════════════════════════════════
+# ENRICH MODE — Update dish columns on existing Sheet rows
+# ══════════════════════════════════════════════════════════════════════════════
 
-# ── Entry point ──────────────────────────────────────────────────────────
+# Sheet column indices (0-based)
+COL_ID       = 0   # A
+COL_NAME     = 1   # B
+COL_STATUS   = 3   # D
+COL_CITY     = 5   # F
+COL_DISH1    = 26  # AA
+COL_DISH2    = 27  # AB
+COL_DISH3    = 28  # AC
+COL_PLACE_ID = 33  # AH
+COL_YELP_ID  = 34  # AI
+
+async def enrich_existing_dishes(overwrite=False, run_yelp=False,
+                                  dry_run=False, limit=0, city_filter=None):
+    """
+    Reads all existing restaurants from the Sheet and enriches their
+    dish columns (AA-AC) using Google reviews + optional Yelp scraping.
+
+    overwrite   — if True, overwrites existing dish data
+                  if False, only fills rows where AA-AC are all empty
+    run_yelp    — if True, also run Yelp scraping after Google
+    dry_run     — preview changes without writing anything
+    limit       — max restaurants to process (0 = all)
+    city_filter — set of city names to restrict to, or None for all
+    """
+    print("=" * 60)
+    print("626 Eats — Dish Enrichment Mode")
+    print("Mode:    " + ("OVERWRITE all dish data" if overwrite
+                          else "Fill empty dish columns only"))
+    print("Yelp:    " + ("enabled" if run_yelp else "disabled"))
+    print("Dry run: " + str(dry_run))
+    if city_filter:
+        print("Cities:  " + ", ".join(sorted(city_filter)))
+    if limit:
+        print("Limit:   " + str(limit) + " restaurants")
+    print("=" * 60)
+
+    print("\nConnecting to Google Sheet...")
+    client = sheets_client()
+    ws     = client.open_by_key(SPREADSHEET_ID).worksheet("Restaurants")
+    rows   = ws.get_all_values()
+    DATA_START = 3
+
+    # ── Build list of rows to process ────────────────────────────────────────
+    to_process = []
+    for i, row in enumerate(rows[DATA_START:], start=DATA_START):
+        rest_id  = safe_get(row, COL_ID)
+        name     = safe_get(row, COL_NAME)
+        status   = safe_get(row, COL_STATUS)
+        city     = safe_get(row, COL_CITY)
+        place_id = safe_get(row, COL_PLACE_ID)
+        dish1    = safe_get(row, COL_DISH1)
+        dish2    = safe_get(row, COL_DISH2)
+        dish3    = safe_get(row, COL_DISH3)
+        yelp_id  = safe_get(row, COL_YELP_ID)
+
+        if not rest_id or not name:
+            continue
+        if status.upper() == "CLOSED":
+            continue
+        if city_filter and city not in city_filter:
+            continue
+        if not place_id:
+            continue  # Can't enrich without a Google Place ID
+
+        has_dishes = bool(dish1 or dish2 or dish3)
+        if has_dishes and not overwrite:
+            continue  # Skip rows that already have dishes
+
+        to_process.append({
+            "sheet_row": i,
+            "rest_id":   rest_id,
+            "name":      name,
+            "city":      city,
+            "place_id":  place_id,
+            "yelp_id":   yelp_id,
+            "current":   [dish1, dish2, dish3],
+            "has_dishes": has_dishes,
+        })
+
+        if limit and len(to_process) >= limit:
+            break
+
+    total = len(to_process)
+    if total == 0:
+        if overwrite:
+            print("\nNo restaurants with Google Place IDs found.")
+        else:
+            print("\nAll restaurants already have dish data.")
+            print("Use --enrich --overwrite to refresh them.")
+        return
+
+    already = sum(1 for r in to_process if r["has_dishes"])
+    print("\nRestaurants to process: " + str(total))
+    if overwrite and already:
+        print("  " + str(already) + " already have dishes (will overwrite)")
+    print("  Google API cost: ~$" + "{:.2f}".format(total * 0.017))
+
+    # ── Phase 1: Google dish extraction ──────────────────────────────────────
+    print("\nExtracting dishes from Google reviews + editorial summaries...")
+    google_results = {}
+    g_found = 0
+
+    for i, r in enumerate(to_process):
+        if i % 25 == 0 and i > 0:
+            print("  " + str(i) + "/" + str(total) +
+                  " done (" + str(g_found) + " got dishes)")
+        try:
+            d = g_details(r["place_id"])
+            dishes = extract_dishes_from_google(d)
+        except Exception as e:
+            print("  Error (" + r["name"] + "): " + str(e))
+            dishes = []
+        google_results[r["place_id"]] = dishes
+        if dishes:
+            g_found += 1
+        time.sleep(0.08)
+
+    print("  Google done: " + str(g_found) + "/" + str(total) +
+          " restaurants got dish data")
+
+    # ── Phase 2: Yelp enrichment (optional) ──────────────────────────────────
+    yelp_results = {}
+    yelp_ids     = {}
+
+    if run_yelp:
+        try:
+            from playwright.async_api import async_playwright
+            playwright_ok = True
+        except ImportError:
+            print("\nWARNING: playwright not installed — skipping Yelp")
+            print("  Fix: pip install playwright && playwright install chromium\n")
+            playwright_ok = False
+
+        if playwright_ok:
+            y_found = 0
+            y_captcha = 0
+            est = total * (YELP_DELAY_MIN + YELP_DELAY_MAX) // 2 // 60
+            direct = sum(1 for r in to_process if r["yelp_id"])
+            print("\nYelp enrichment (~" + str(est) + " min)")
+            print("  " + str(direct) + " have existing Yelp IDs (direct page load)")
+            print("  " + str(total - direct) + " need search\n")
+
+            async with async_playwright() as pw:
+                browser, context = await new_browser_context(pw)
+                page = await context.new_page()
+                try:
+                    await page.goto("https://www.yelp.com",
+                                    wait_until="domcontentloaded", timeout=15000)
+                    await page.wait_for_timeout(random.randint(2000, 3500))
+                except Exception:
+                    pass
+
+                for i, r in enumerate(to_process):
+                    name    = r["name"]
+                    city    = r["city"]
+                    pid     = r["place_id"]
+                    yelp_id = r["yelp_id"]
+
+                    print("  [" + str(i+1) + "/" + str(total) + "] " +
+                          name, end=" ... ", flush=True)
+
+                    # Go direct to biz page if we already have the Yelp ID
+                    captcha_hit = False
+                    new_yelp_id = yelp_id
+                    y_dishes    = []
+
+                    if yelp_id:
+                        biz_url = "https://www.yelp.com/biz/" + yelp_id
+                        try:
+                            await page.goto(biz_url,
+                                            wait_until="domcontentloaded",
+                                            timeout=25000)
+                            await page.wait_for_timeout(
+                                random.randint(2000, 3500))
+                            html = await page.content()
+                            if any(s in html.lower() for s in [
+                                    "captcha","unusual traffic","are you a robot"]):
+                                captcha_hit = True
+                            else:
+                                from bs4 import BeautifulSoup
+                                soup = BeautifulSoup(html, "html.parser")
+                                chunks = [el.get_text(" ", strip=True)
+                                          for el in soup.find_all("p", {"lang":"en"})]
+                                y_dishes = extract_dishes(
+                                    " ".join(chunks[:MAX_REVIEW_TEXT]))
+                        except Exception:
+                            pass
+                    else:
+                        url, new_yelp_id = await yelp_find_business(
+                            page, name, city)
+                        if url is None:
+                            try:
+                                html = await page.content()
+                                captcha_hit = any(s in html.lower() for s in [
+                                    "captcha","unusual traffic","are you a robot"])
+                            except Exception:
+                                captcha_hit = False
+                        elif url:
+                            yd = await yelp_scrape_business(page, url)
+                            if yd is None:
+                                captcha_hit = True
+                            else:
+                                y_dishes = yd.get("yelp_dishes", [])
+
+                    if captcha_hit:
+                        print("CAPTCHA — resetting browser")
+                        y_captcha += 1
+                        try:
+                            await browser.close()
+                        except Exception:
+                            pass
+                        await asyncio.sleep(random.uniform(8, 15))
+                        browser, context = await new_browser_context(pw)
+                        page = await context.new_page()
+                        try:
+                            await page.goto("https://www.yelp.com",
+                                            wait_until="domcontentloaded",
+                                            timeout=15000)
+                            await page.wait_for_timeout(
+                                random.randint(3000, 5000))
+                        except Exception:
+                            pass
+                    else:
+                        if y_dishes:
+                            print(", ".join(y_dishes[:3]))
+                            y_found += 1
+                        else:
+                            print("no dishes")
+
+                    yelp_results[pid] = y_dishes
+                    yelp_ids[pid]     = new_yelp_id
+
+                    delay = random.uniform(YELP_DELAY_MIN, YELP_DELAY_MAX)
+                    await page.wait_for_timeout(int(delay * 1000))
+
+                    if (i + 1) % 40 == 0 and i < total - 1:
+                        print("  Rotating browser...")
+                        try:
+                            await browser.close()
+                        except Exception:
+                            pass
+                        await asyncio.sleep(random.uniform(4, 8))
+                        browser, context = await new_browser_context(pw)
+                        page = await context.new_page()
+                        try:
+                            await page.goto("https://www.yelp.com",
+                                            wait_until="domcontentloaded",
+                                            timeout=15000)
+                            await page.wait_for_timeout(
+                                random.randint(2000, 4000))
+                        except Exception:
+                            pass
+
+                try:
+                    await browser.close()
+                except Exception:
+                    pass
+
+            print("\n  Yelp complete: " + str(y_found) + " got dishes, " +
+                  str(y_captcha) + " CAPTCHA hits")
+
+    # ── Write to Sheet ────────────────────────────────────────────────────────
+    print("\n" + ("-" * 60))
+    if dry_run:
+        print("DRY RUN — showing what would be written:\n")
+
+    updated       = 0
+    no_data       = 0
+    unchanged     = 0
+    batch_updates = []
+
+    for r in to_process:
+        pid      = r["place_id"]
+        g_dishes = google_results.get(pid, [])
+        y_dishes = yelp_results.get(pid, [])
+        final    = merge_dishes(g_dishes, y_dishes)[:3]
+
+        if not final:
+            no_data += 1
+            continue
+
+        dish1 = final[0] if len(final) > 0 else ""
+        dish2 = final[1] if len(final) > 1 else ""
+        dish3 = final[2] if len(final) > 2 else ""
+
+        current  = r["current"]
+        new_vals = [dish1, dish2, dish3]
+        if current == new_vals:
+            unchanged += 1
+            continue
+
+        src_tag = ("G+Y" if (g_dishes and y_dishes) else
+                   "G"   if g_dishes else "Y")
+        old_str = " | ".join(filter(None, current)) or "(empty)"
+        new_str = " | ".join(filter(None, new_vals))
+
+        print("  [" + src_tag + "] " + r["name"] + " (" + r["city"] + ")")
+        if overwrite and any(current):
+            print("    Was: " + old_str)
+        print("    Now: " + new_str)
+
+        if not dry_run:
+            sheet_row = r["sheet_row"] + 1  # 1-based
+            batch_updates.append({
+                "range":  "AA" + str(sheet_row) + ":AC" + str(sheet_row),
+                "values": [[dish1, dish2, dish3]],
+            })
+            # Save new Yelp ID if we discovered one
+            nyi = yelp_ids.get(pid)
+            if run_yelp and nyi and not r["yelp_id"]:
+                batch_updates.append({
+                    "range":  "AI" + str(sheet_row),
+                    "values": [[nyi]],
+                })
+
+        updated += 1
+
+    # Batch write all changes
+    if not dry_run and batch_updates:
+        BATCH = 200
+        for start in range(0, len(batch_updates), BATCH):
+            ws.batch_update(batch_updates[start:start + BATCH])
+            time.sleep(0.5)
+
+    print("\n" + ("=" * 60))
+    print("Enrich complete" + (" (DRY RUN)" if dry_run else "") + "!")
+    print("  Updated:   " + str(updated))
+    print("  No data:   " + str(no_data) +
+          "  ← no dish mentions found in Google reviews")
+    print("  Unchanged: " + str(unchanged))
+
+    if no_data:
+        print("\nTip: " + str(no_data) + " restaurants had no dish mentions.")
+        print("  Add dishes manually for these, or try --enrich --yelp")
+        print("  for Yelp review data.")
+    if dry_run:
+        print("\nRun without --dry-run to write changes to your Sheet.")
+
 
 async def main():
-    parser = argparse.ArgumentParser(description="626 Eats Research Sweep")
-    parser.add_argument("--test",     action="store_true")
-    parser.add_argument("--no-yelp",  action="store_true")
-    parser.add_argument("--no-sheet", action="store_true")
-    parser.add_argument("--cities",   default="all")
+    parser = argparse.ArgumentParser(
+        description="626 Eats Research Sweep — Google + Yelp"
+    )
+    # ── Sweep modes ────────────────────────────────────────────────────────
+    parser.add_argument("--test",      action="store_true",
+                        help="Test API connections and exit")
+    parser.add_argument("--no-yelp",   action="store_true",
+                        help="Skip Yelp enrichment (faster, Google dishes only)")
+    parser.add_argument("--no-sheet",  action="store_true",
+                        help="Preview only, no Sheet write")
+    parser.add_argument("--cities",    default="all",
+                        help='Cities to sweep e.g. "Alhambra,San Gabriel" or "all"')
+    # ── Enrich mode (update existing rows) ────────────────────────────────
+    parser.add_argument("--enrich",    action="store_true",
+                        help="Enrich dish columns on existing Sheet rows (no new discovery)")
+    parser.add_argument("--overwrite", action="store_true",
+                        help="With --enrich: overwrite dish data even if already filled")
+    parser.add_argument("--yelp",      action="store_true",
+                        help="With --enrich: also run Yelp after Google")
+    parser.add_argument("--dry-run",   action="store_true",
+                        help="With --enrich: preview changes without writing")
+    parser.add_argument("--limit",     type=int, default=0,
+                        help="With --enrich: only process first N restaurants")
+    parser.add_argument("--filter-city", default="",
+                        help='With --enrich: only process these cities e.g. "Alhambra"')
     args = parser.parse_args()
 
     if args.test:
-        g = test_google_api()
-        y = await test_playwright_yelp()
-        print("\nResult: " + ("All OK" if g and y else "Failures - see above"))
-        sys.exit(0 if (g and y) else 1)
+        print("Testing connections...\n")
+        g_ok = test_google()
+        y_ok = await test_yelp()
+        print("\n" + ("All systems go." if (g_ok and y_ok) else
+              "Issues found — see above. Use --no-yelp if Yelp is blocking."))
+        sys.exit(0 if g_ok else 1)
 
     if not GOOGLE_API_KEY:
-        sys.exit("Set GOOGLE_API_KEY env var")
+        sys.exit("ERROR: Set GOOGLE_API_KEY\n  $env:GOOGLE_API_KEY = 'AIzaSy...'")
 
-    cities = SGV_CITIES
-    if args.cities.lower() != "all":
+    # ── ENRICH MODE: update dish columns on existing rows ────────────────────
+    if args.enrich:
+        if not SPREADSHEET_ID or not SA_JSON:
+            sys.exit("ERROR: SPREADSHEET_ID and GOOGLE_SERVICE_ACCOUNT_JSON "
+                     "are required for --enrich")
+        city_filter = None
+        if args.filter_city:
+            city_filter = {c.strip() for c in args.filter_city.split(",")}
+        await enrich_existing_dishes(
+            overwrite=args.overwrite,
+            run_yelp=args.yelp,
+            dry_run=args.dry_run,
+            limit=args.limit,
+            city_filter=city_filter,
+        )
+        return  # Done — don't run the sweep
+
+    # ── SWEEP MODE: discover new restaurants ─────────────────────────────────
+    if args.cities.lower() == "all":
+        cities = SGV_CITIES
+    else:
         wanted = {c.strip() for c in args.cities.split(",")}
         cities = [c for c in SGV_CITIES if c["city"] in wanted]
         if not cities:
-            sys.exit("No cities matched: " + str([c["city"] for c in SGV_CITIES]))
+            sys.exit("No cities matched. Available: " +
+                     ", ".join(c["city"] for c in SGV_CITIES))
 
+    yelp_on = not args.no_yelp
     print("=" * 60)
-    print("626 Eats - Research Sweep")
-    print("Cities: " + str(len(cities)) + "  Yelp: " + ("off" if args.no_yelp else "on"))
+    print("626 Eats Research Sweep")
+    print("Cities:  " + str(len(cities)))
+    print("Google:  enabled (discovery + dish extraction from reviews)")
+    print("Yelp:    " + ("enabled (merges with Google dishes)" if yelp_on
+                          else "disabled (--no-yelp)"))
     print("=" * 60)
 
-    print("\nPhase 1 - Google Places discovery...")
+    # Phase 1a: Discover
+    print("\nPhase 1a — Google Places discovery...")
     raw = collect_google(cities)
-    print("  " + str(len(raw)) + " unique Chinese restaurants found\n")
+    print("\n  Found " + str(len(raw)) + " unique Chinese restaurants")
+
     if not raw:
-        print("No results. Run --test to verify API key.")
+        print("No results. Run --test to check your API key.")
         return
 
-    print("Phase 1b - Fetching details...")
+    # Phase 1b: Enrich with details + extract dishes from Google reviews
+    print("\nPhase 1b — Fetching details + extracting dishes from Google reviews...")
     restaurants = enrich_google_details(raw)
-    print("  " + str(len(restaurants)) + " enriched\n")
 
-    if not args.no_yelp:
+    # Phase 2: Yelp enrichment (merge dishes, fill photo gaps)
+    if yelp_on:
         restaurants = await enrich_with_yelp(restaurants)
     else:
-        print("Phase 2 - Yelp skipped\n")
+        print("\nPhase 2 — Yelp skipped (--no-yelp)")
+        # Set final_dishes = google_dishes for consistency
+        for r in restaurants:
+            r["final_dishes"] = r.get("google_dishes", [])[:3]
 
-    print("Phase 3 - Writing to Google Sheet...")
+    # Phase 3: Write
+    print("\nPhase 3 — Writing to Google Sheet...")
     if args.no_sheet:
-        print("  (preview only)\n")
-        for r in restaurants[:15]:
-            region, _ = auto_classify(r["name"])
-            print("  " + r["name"][:35].ljust(36) + r["city"][:16].ljust(17) +
-                  region[:25] + "  " + str(r.get("yelp_dishes",[""])[:2]))
-        if len(restaurants) > 15:
-            print("  ..." + str(len(restaurants)-15) + " more")
+        print("  (--no-sheet: preview only)\n")
+        total_with_dishes = sum(1 for r in restaurants if r.get("final_dishes"))
+        print("  " + str(total_with_dishes) + "/" + str(len(restaurants)) +
+              " restaurants got dishes")
+        print()
+        print("  " + "Name".ljust(35) + "City".ljust(18) + "Dishes")
+        print("  " + "-" * 80)
+        for r in restaurants[:20]:
+            dishes = ", ".join(r.get("final_dishes", [])[:2]) or "—"
+            print("  " + r["name"][:34].ljust(35) +
+                  r["city"][:17].ljust(18) + dishes)
+        if len(restaurants) > 20:
+            print("  ... and " + str(len(restaurants)-20) + " more")
         return
 
     if not SPREADSHEET_ID or not SA_JSON:
-        print("  SPREADSHEET_ID/SA_JSON not set - skipping write")
+        print("  NOTE: SPREADSHEET_ID or SA_JSON not set. Set env vars to write.")
+        total_with_dishes = sum(1 for r in restaurants if r.get("final_dishes"))
+        print("  " + str(total_with_dishes) + "/" + str(len(restaurants)) +
+              " restaurants would get dishes")
         return
 
     added = write_to_sheet(restaurants)
-    print("\n" + "=" * 60)
-    print("Done! " + str(added) + " restaurants added.")
-    print("Next: filter col J = NEEDS CLASSIFICATION and assign regions.")
-    print("=" * 60)
 
+    # Count dishes
+    total_with_dishes = sum(1 for r in restaurants if r.get("final_dishes"))
+
+    print("\n" + "=" * 60)
+    print("Sweep complete!")
+    print("  " + str(added) + " new restaurants added to your Sheet")
+    print("  " + str(total_with_dishes) + "/" + str(len(restaurants)) +
+          " restaurants got dish data")
+    print("\nNext steps:")
+    print("  1. Filter col J = 'NEEDS CLASSIFICATION' and assign regions")
+    print("  2. Review cols AA-AC (dishes) — edit any wrong ones")
+    print("  3. Run classify_regions.py for AI classification")
+    print("  4. Run export_json.py then git push")
+    print("=" * 60)
 
 if __name__ == "__main__":
     asyncio.run(main())
