@@ -1399,6 +1399,7 @@ window.addEventListener('load', function(){
 
     return {
       id:     r.id || r.googlePlaceId || r.google_place_id || Math.random(),
+      rawStatus: r.status || 'OPEN',
       name:   r.name || r.name_en || '',
       zh:     r.nameChinese || r.name_zh || '',
       city:   r.city || '',
@@ -1452,19 +1453,28 @@ window.addEventListener('load', function(){
       var rawRests = Array.isArray(data) ? data : (data.restaurants || []);
       var rawDishes = data.dishes || [];
 
-      RESTS = rawRests.map(mapRestaurant).filter(function(r){ return r.name && r.status !== 'CLOSED'; });
+      console.log('[626 Eats] JSON loaded. Raw restaurants:', rawRests.length, 'Raw dishes:', rawDishes.length);
+
+      // Map and filter — only exclude explicitly CLOSED restaurants
+      RESTS = rawRests.map(mapRestaurant).filter(function(r){
+        return r.name && r.rawStatus !== 'CLOSED';
+      });
+
+      console.log('[626 Eats] After mapping and filter:', RESTS.length, 'restaurants');
+
       RESTS.forEach(function(r){ RstMap[r.id] = r; });
 
       if (rawDishes.length) {
         DISHES = rawDishes.map(mapDish);
         DISHES.forEach(function(d){ DMap[d.id] = d; });
+        console.log('[626 Eats] Dishes loaded:', DISHES.length);
       }
 
       hideOverlay();
       renderHome();
     })
     .catch(function(err) {
-      console.warn('Could not load restaurants.json:', err.message);
+      console.error('[626 Eats] Failed to load restaurants.json:', err.message);
       // Graceful fallback: hide spinner, render with empty data
       hideOverlay();
       renderHome();
