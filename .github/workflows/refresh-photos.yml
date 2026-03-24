@@ -1,16 +1,14 @@
 name: Refresh Photo URLs
 
 on:
-  schedule:
-    - cron: '0 11 * * 0'
   workflow_dispatch:
     inputs:
       max_age_days:
-        description: 'Refresh URLs older than N days'
+        description: 'Refresh URLs older than N days (default: 90)'
         required: false
         default: '90'
       dry_run:
-        description: 'Dry run (no changes written)'
+        description: 'Dry run — preview without writing changes (true/false)'
         required: false
         default: 'false'
 
@@ -53,5 +51,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "626 Eats Bot"
           git add data/restaurants.json
-          git diff --staged --quiet || git commit -m "Auto: refresh photo URLs [$(date -u '+%Y-%m-%d')]"
+          git diff --staged --quiet || git commit -m "Manual: refresh photo URLs [$(date -u '+%Y-%m-%d')]"
           git push origin HEAD:main || echo "Nothing to push"
