@@ -2,10 +2,8 @@ name: Refresh Photo URLs
 
 on:
   schedule:
-    # Every Sunday at 3am PT (11am UTC)
     - cron: '0 11 * * 0'
   workflow_dispatch:
-    # Allow manual trigger from GitHub Actions tab
     inputs:
       max_age_days:
         description: 'Refresh URLs older than N days'
@@ -37,7 +35,7 @@ jobs:
 
       - name: Refresh photo URLs in Google Sheet
         env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
           MAX_AGE_DAYS: ${{ github.event.inputs.max_age_days || '90' }}
@@ -50,20 +48,10 @@ jobs:
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
         run: python scripts/export_json.py
 
-      - name: Commit updated restaurants.json
+      - name: Commit and push updated restaurants.json
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "626 Eats Bot"
           git add data/restaurants.json
-          # Only commit if there are changes
-          git diff --staged --quiet || git commit -m "Auto: refresh photo URLs and export JSON [$(date -u '+%Y-%m-%d')]"
-
-      - name: Push changes
-        uses: ad-hoc/actions-push@v3
-        continue-on-error: true
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Push via git (fallback)
-        run: |
+          git diff --staged --quiet || git commit -m "Auto: refresh photo URLs [$(date -u '+%Y-%m-%d')]"
           git push origin HEAD:main || echo "Nothing to push"
