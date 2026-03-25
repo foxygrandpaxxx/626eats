@@ -820,7 +820,7 @@ def sheets_client():
             "https://www.googleapis.com/auth/drive",
         ]
     )
-    return gspread.authorize(creds)
+    return gspread.Client(auth=creds)
 
 def write_to_sheet(restaurants):
     client = sheets_client()

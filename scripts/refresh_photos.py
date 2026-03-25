@@ -52,8 +52,7 @@ def get_sheets_client():
         "https://www.googleapis.com/auth/drive",
     ]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-    client = gspread.authorize(creds)
-    return client
+    return gspread.Client(auth=creds)
 
 def fetch_place_photos(place_id, max_photos=4):
     """Fetch photo references for a Place ID and return signed photo URLs."""
@@ -94,6 +93,15 @@ def is_stale(date_str, max_age_days):
         return datetime.today() - verified > timedelta(days=max_age_days)
     except ValueError:
         return True  # Unparseable = stale
+
+def col_letter(n):
+    """Convert 1-based column number to spreadsheet letter(s). e.g. 30 -> 'AD'"""
+    result = ''
+    while n > 0:
+        n, rem = divmod(n - 1, 26)
+        result = chr(65 + rem) + result
+    return result
+
 
 def run_refresh():
     print(f"Photo Refresh — max_age={MAX_AGE_DAYS}d, dry_run={DRY_RUN}")
@@ -169,14 +177,14 @@ def run_refresh():
 
         for col_offset, (col, label) in enumerate(zip(PHOTO_COLS, PHOTO_LABELS)):
             url = photo_urls[col_offset] if col_offset < len(photo_urls) else ""
-            cell_ref = f"{chr(64 + col)}{spreadsheet_row}"  # e.g. "AD5"
+            cell_ref = f"{col_letter(col)}{spreadsheet_row}"  # e.g. "AD5"
             updates.append({
                 "range": cell_ref,
                 "values": [[url]],
             })
 
         # Update date verified
-        date_col_ref = f"{chr(64 + COL_DATE_VERIFIED)}{spreadsheet_row}"
+        date_col_ref = f"{col_letter(COL_DATE_VERIFIED)}{spreadsheet_row}"
         updates.append({"range": date_col_ref, "values": [[today_str]]})
 
         refreshed += 1
