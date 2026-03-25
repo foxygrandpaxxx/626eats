@@ -1,24 +1,20 @@
-name: Refresh Photo URLs
+name: Export Data
 
-# Manual trigger only — run this when photos look broken
-# It fetches fresh photo references from Google Places and rewrites
-# the URLs in the Sheet, then exports and pushes restaurants.json
+# Manually triggered from GitHub Actions tab
+# Use this any time you want to refresh restaurants.json from the Sheet
+# and push fresh photo URLs (with the real API key from secrets)
 on:
   workflow_dispatch:
     inputs:
-      max_age_days:
-        description: 'Refresh URLs older than N days (default: 90)'
+      fix_photos:
+        description: 'Rewrite photo URLs with current API key'
         required: false
-        default: '90'
-      dry_run:
-        description: 'Dry run — preview without writing changes (true/false)'
-        required: false
-        default: 'false'
+        default: 'true'
 
 jobs:
-  refresh-photos:
+  export:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
 
     steps:
       - name: Checkout repo
@@ -34,22 +30,14 @@ jobs:
       - name: Install dependencies
         run: pip install requests gspread google-auth
 
-      - name: Refresh photo references in Google Sheet
-        env:
-          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
-          MAX_AGE_DAYS: ${{ github.event.inputs.max_age_days || '90' }}
-          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
-        run: python scripts/refresh_photos.py
-
-      - name: Export Sheet → restaurants.json (with fresh URLs)
+      - name: Export Sheet → restaurants.json
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
         run: python scripts/export_json.py
 
       - name: Rewrite photo URLs with current API key
+        if: ${{ github.event.inputs.fix_photos != 'false' }}
         env:
           GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
         run: |
@@ -88,5 +76,5 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "626 Eats Bot"
           git add data/restaurants.json
-          git diff --staged --quiet || git commit -m "Refresh photos [$(date -u '+%Y-%m-%d')]"
+          git diff --staged --quiet || git commit -m "Export: refresh data and photo URLs [$(date -u '+%Y-%m-%d')]"
           git push origin HEAD:main || echo "Nothing to push"
