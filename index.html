@@ -1427,10 +1427,7 @@ function renderRegionMode(el, q){
     });
     var dMatches = DISHES.filter(function(d){
       return d.name.toLowerCase().indexOf(q)>=0 ||
-             d.zh.indexOf(q)>=0 ||
-             d.region.toLowerCase().indexOf(q)>=0 ||
-             d.desc.toLowerCase().indexOf(q)>=0 ||
-             d.flavors.some(function(f){ return f.toLowerCase().indexOf(q)>=0; });
+             (d.fmt||'').toLowerCase().indexOf(q)>=0;
     });
 
     if(dMatches.length){
@@ -1500,10 +1497,7 @@ function renderDishMode(el, q){
   var dishes = DISHES;
   if(q) dishes = dishes.filter(function(d){
     return d.name.toLowerCase().indexOf(q)>=0 ||
-           d.zh.indexOf(q)>=0 ||
-           d.region.toLowerCase().indexOf(q)>=0 ||
-           d.desc.toLowerCase().indexOf(q)>=0 ||
-           d.flavors.some(function(f){ return f.toLowerCase().indexOf(q)>=0; });
+           (d.fmt||'').toLowerCase().indexOf(q)>=0;
   });
   if(fmtFilter !== 'All') dishes = dishes.filter(function(d){ return d.fmt===fmtFilter; });
 
@@ -1615,29 +1609,35 @@ function openDishDetail(d){
   if(!d.rests || !d.rests.length){
     rl.appendChild(makeEmpty('🔍','Coming soon','No specific SGV spots tracked for this dish yet.'));
   } else {
-    d.rests.forEach(function(entry, i){
-      var r = RstMap[entry.id];
-      if(!r) return;
-      var reg2 = RMap[r.region];
-      var item = document.createElement('div');
-      item.className = 'rank-item anim';
-      item.style.animationDelay = (i*.06)+'s';
+    // rests is now array of restaurant name strings
+    var restNames = d.rests || [];
+    var restObjs = restNames.map(function(entry){
+      if(typeof entry === 'string'){
+        return RESTS.find(function(r){ return r.name === entry; }) || null;
+      }
+      return RstMap[entry.id] || null;
+    }).filter(Boolean);
 
-      var numEl = document.createElement('div'); numEl.className='rank-num'; numEl.textContent=(i+1);
-      var body = document.createElement('div'); body.className='rank-body';
-      var nm = document.createElement('div'); nm.className='rank-name';
-      nm.textContent = r.name + (entry.best?' 🏆':'');
-      var cy = document.createElement('div'); cy.className='rank-city';
-      cy.textContent = r.city+' · '+r.region;
-      body.appendChild(nm); body.appendChild(cy);
-      if(entry.note){ var nt=document.createElement('div'); nt.className='rank-note'; nt.textContent=entry.note; body.appendChild(nt); }
-      if(d.bestIn===r.name && d.bestSrc){ var src=document.createElement('div'); src.className='rank-source'; src.textContent='Source: '+d.bestSrc; body.appendChild(src); }
-
-      var ico = document.createElement('div'); ico.className='rank-icon'; ico.textContent=reg2?reg2.icon:'🍽';
-      item.appendChild(numEl); item.appendChild(body); item.appendChild(ico);
-      item.onclick = function(){ openRestDetail(r); };
-      rl.appendChild(item);
-    });
+    if(!restObjs.length){
+      rl.appendChild(makeEmpty('🔍','Coming soon','No specific SGV spots tracked for this dish yet.'));
+    } else {
+      restObjs.forEach(function(r, i){
+        var reg2 = RMap[r.region];
+        var item = document.createElement('div');
+        item.className = 'rank-item anim';
+        item.style.animationDelay = (i*.06)+'s';
+        var numEl = document.createElement('div'); numEl.className='rank-num'; numEl.textContent=(i+1);
+        var body = document.createElement('div'); body.className='rank-body';
+        var nm = document.createElement('div'); nm.className='rank-name'; nm.textContent=r.name;
+        var cy = document.createElement('div'); cy.className='rank-city';
+        cy.textContent = r.city+' · '+r.region;
+        body.appendChild(nm); body.appendChild(cy);
+        var ico = document.createElement('div'); ico.className='rank-icon'; ico.textContent=reg2?reg2.icon:'🍽';
+        item.appendChild(numEl); item.appendChild(body); item.appendChild(ico);
+        item.onclick = function(){ openRestDetail(r); };
+        rl.appendChild(item);
+      });
+    }
   }
   showScreen('s-dish', true);
 }
