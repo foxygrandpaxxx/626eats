@@ -75,22 +75,6 @@ REST_COLS = {
     "dish3_summary": 50,  # AX
 }
 
-DISH_COLS = {
-    "id":       1,
-    "name":     2,
-    "chinese":  3,
-    "format":   4,
-    "region":   5,
-    "origin":   6,
-    "flavors":  7,
-    "desc":     8,
-    "best_in":  9,
-    "best_src": 10,
-    "photo":    11,
-    "photo2":   12,
-    "notes":    13,
-}
-
 LINK_COLS = {
     "link_id":        1,
     "rest_id":        2,
@@ -149,37 +133,8 @@ def export():
     client = get_sheets_client()
     spreadsheet = client.open_by_key(SPREADSHEET_ID)
 
-    # ── Read Dishes ────────────────────────────────────────────────────────────
-    print("Reading Dishes sheet...")
-    dish_ws = spreadsheet.worksheet("Dishes")
-    dish_rows = dish_ws.get_all_values()
+    # Dishes tab no longer exported — DISHES array lives in the app (dishes_array.js)
     DATA_START = 3  # 0-indexed; spreadsheet row 4
-
-    dishes = []
-    dish_map = {}  # id -> dish dict
-
-    for row in dish_rows[DATA_START:]:
-        did = get_cell(row, DISH_COLS["id"])
-        if not did:
-            continue
-        d = {
-            "id":      did,
-            "name":    get_cell(row, DISH_COLS["name"]),
-            "chinese": get_cell(row, DISH_COLS["chinese"]),
-            "format":  get_cell(row, DISH_COLS["format"]),
-            "region":  get_cell(row, DISH_COLS["region"]),
-            "origin":  get_cell(row, DISH_COLS["origin"]),
-            "flavors": parse_list(get_cell(row, DISH_COLS["flavors"]), "|"),
-            "desc":    get_cell(row, DISH_COLS["desc"]),
-            "bestIn":  get_cell(row, DISH_COLS["best_in"]),
-            "bestSrc": get_cell(row, DISH_COLS["best_src"]),
-            "photoUrl": get_cell(row, DISH_COLS["photo"]),
-            "photoAlt": get_cell(row, DISH_COLS["photo2"]),
-        }
-        dishes.append(d)
-        dish_map[did] = d
-
-    print(f"  Loaded {len(dishes)} dishes")
 
     # ── Read Restaurant_Dishes links ───────────────────────────────────────────
     print("Reading Restaurant_Dishes sheet...")
@@ -327,9 +282,7 @@ def export():
         "version":         datetime.utcnow().isoformat() + "Z",
         "exportedAt":      datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC"),
         "restaurantCount": len(restaurants),
-        "dishCount":       len(dishes),
         "restaurants":     restaurants,
-        "dishes":          dishes,
     }
 
     with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
@@ -337,7 +290,7 @@ def export():
 
     size_kb = OUTPUT_PATH.stat().st_size // 1024
     print(f"\nExported to {OUTPUT_PATH} ({size_kb}KB)")
-    print(f"  {len(restaurants)} restaurants | {len(dishes)} dishes")
+    print(f"  {len(restaurants)} restaurants")
     if skipped:
         print(f"  Skipped (closed): {', '.join(skipped[:5])}{'...' if len(skipped)>5 else ''}")
 

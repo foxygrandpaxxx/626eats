@@ -2129,9 +2129,10 @@ window.addEventListener('load', function(){
     .then(function(data) {
       // Support both array format and {restaurants:[...]} object format
       var rawRests = Array.isArray(data) ? data : (data.restaurants || []);
-      var rawDishes = data.dishes || [];
+      // dishes are embedded directly in the app — no JSON loading needed
+      var rawDishes = [];
 
-      console.log('[626 Eats] JSON loaded. Raw restaurants:', rawRests.length, 'Raw dishes:', rawDishes.length);
+      console.log('[626 Eats] JSON loaded. Restaurants:', rawRests.length, ', Embedded dishes:', DISHES.length);
 
       // Map and filter — only exclude explicitly CLOSED restaurants
       RESTS = rawRests.map(mapRestaurant).filter(function(r){
