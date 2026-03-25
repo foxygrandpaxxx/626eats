@@ -125,7 +125,7 @@ def get_sheets_client():
         "https://www.googleapis.com/auth/drive",
     ]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
-    return gspread.authorize(creds)
+    return gspread.Client(auth=creds)
 
 def export():
     print(f"Exporting from Google Sheets: {SPREADSHEET_ID}")
