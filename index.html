@@ -77,7 +77,7 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
   font-weight:400;letter-spacing:2.5px;text-transform:uppercase;
   color:rgba(253,248,242,0.48);margin-top:1px}
 /* ── HERO ── */
-.hero{background:var(--red-dark);padding:28px 22px 36px;
+.hero{background:radial-gradient(ellipse at 30% 40%, #8B2E18 0%, var(--red-dark) 65%);padding:28px 22px 36px;
   position:relative;overflow:hidden}
 .hero::before{content:'粵 川 滬 台 陝 新 湘 滇 黔 閩';position:absolute;
   bottom:-8px;left:-8px;font-size:90px;opacity:.04;color:var(--gold);
@@ -153,12 +153,25 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
   margin-bottom:8px}
 .rc-count{display:inline-flex;align-items:center;background:rgba(0,0,0,0.055);
   border-radius:8px;padding:3px 8px;font-size:11px;font-weight:600;color:var(--ink-soft)}
+.rc-thumb{position:absolute;top:10px;right:10px;width:42px;height:42px;
+  border-radius:8px;object-fit:cover;opacity:0.6;pointer-events:none}
+
+/* ── PRESS ENTRIES ── */
+.press-entry{background:var(--cream);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:13px 14px;margin-bottom:8px;text-decoration:none;display:block;color:inherit}
+.press-entry:last-child{margin-bottom:0}
+.press-pub{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:4px}
+.press-headline{font-size:13px;font-weight:600;color:var(--ink);line-height:1.35;margin-bottom:6px}
+.press-excerpt{font-size:12px;color:var(--ink-soft);font-style:italic;line-height:1.6}
+.press-dish{font-size:11px;color:var(--gold);font-weight:600;margin-top:5px}
+.badge-press{background:rgba(201,150,58,0.1);color:#7a5c1e;border:1px solid rgba(201,150,58,0.3);font-size:10px}
 
 /* ── DISH CARDS ── */
 .dish-card{background:var(--cream);border-radius:var(--radius-sm);
   padding:13px 14px;border:1px solid var(--border);cursor:pointer;
   display:flex;align-items:center;gap:13px;box-shadow:var(--shadow-sm);
-  transition:transform .15s}
+  transition:transform .15s;animation:cardIn .25s ease both}
 .dish-card:active{transform:scale(0.98)}
 .dish-card-icon{font-size:28px;flex-shrink:0;width:46px;height:46px;
   display:flex;align-items:center;justify-content:center;
@@ -176,7 +189,8 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 .rest-list{padding:10px 16px 110px;display:flex;flex-direction:column;gap:11px}
 .rest-card{background:var(--cream);border-radius:var(--radius);
   border:1px solid var(--border);box-shadow:var(--shadow-sm);overflow:hidden;
-  cursor:pointer;transition:transform .18s,box-shadow .18s;position:relative}
+  cursor:pointer;transition:transform .18s,box-shadow .18s;position:relative;
+  animation:cardIn .3s ease both}
 .rest-card:active{transform:scale(0.985);box-shadow:none}
 .rest-accent{height:3px}
 .rest-body{padding:14px 46px 15px 15px}
@@ -358,6 +372,7 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 .tab-icon{font-size:22px;line-height:1}
 .tab-label{font-size:10px;font-weight:500;color:var(--ink-muted);letter-spacing:.3px}
 .tab-item.on .tab-label{color:var(--red)}
+.tab-item.on::before{content:'';display:block;width:20px;height:3px;background:var(--red);border-radius:2px;position:absolute;top:0;left:50%;transform:translateX(-50%)}
 
 /* ── FAVORITES EMPTY ── */
 .fav-empty{flex:1;display:flex;flex-direction:column;align-items:center;
@@ -417,8 +432,16 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 
 /* ── ANIMATIONS ── */
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .anim{animation:fadeUp .3s ease both}
 .exit-right{transform:translateX(28px)!important;opacity:0!important;transition:transform .3s ease,opacity .3s ease;pointer-events:none}
+
+/* ── SKELETON LOADING ── */
+.skel{background:linear-gradient(90deg,var(--bg2) 25%,rgba(253,248,242,0.85) 50%,var(--bg2) 75%);background-size:200% 100%;animation:shimmer 1.4s ease-in-out infinite;border-radius:6px;flex-shrink:0}
+.skel-photo{height:155px;border-radius:0;margin-bottom:0}
+.skel-line{height:13px;margin:10px 16px}
+.skel-line.short{width:50%;margin-top:6px}
 
 /* ── HOME SCROLL OUTER ── */
 #home-scroll-outer{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
@@ -494,6 +517,7 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
         <input type="search" id="home-q" placeholder="Search restaurants or dishes…" oninput="renderHome()" autocomplete="off" autocorrect="off">
         <button class="search-clear" id="search-clear-btn" onclick="clearSearch()">&#215;</button>
       </div>
+      <div id="search-count" style="font-size:12px;color:var(--ink-muted);padding:6px 4px 0;display:none"></div>
     </div>
     <div class="browse-toggle" style="margin:10px 16px 0">
       <button class="toggle-btn active" id="tb-region" onclick="setMode('region')">By Region</button>
@@ -594,6 +618,9 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
       </div>
       <div class="dsec" id="rest-notes-sec"><div class="dsec-label">Notes &amp; Accolades</div>
         <div class="notes-box" id="rest-notes"></div>
+      </div>
+      <div class="dsec" id="rest-press-sec" style="display:none"><div class="dsec-label">In the Press</div>
+        <div id="rest-press"></div>
       </div>
       <div class="dsec"><div class="dsec-label">Actions</div>
         <div class="action-stack">
@@ -743,6 +770,7 @@ REGIONS.forEach(function(r){RMap[r.key]=r;});
 // DATA — RESTAURANTS
 // ═══════════════════════════════════════════════════
 var RESTS = [];
+var PRESS = {};  // rest_id -> [{publication, headline, url, excerpt, dishMentioned, date}]
 var DISHES = [
   {id:'D001',name:'Orange Chicken',fmt:'Poultry',icon:'🍗',count:11,rests:['La Mein Natural Noodles','Yummi Chinese Fast Food','Mandarin taste restaurant']},
   {id:'D002',name:'Beef Noodle Soup',fmt:'Noodles — Broth',icon:'🍜',count:7,rests:['鹵億鮮 Luyixian','3和面馆 3 He Noodles','NO. 1 NOODLE HOUSE']},
@@ -1467,7 +1495,18 @@ function renderHome(){
   scroll.innerHTML = '';
   if(browseMode === 'region') renderRegionMode(scroll, q);
   else renderDishMode(scroll, q);
-  // Reset outer scroll to top when content changes via toggle/filter
+  // Show search result count
+  var cntEl = document.getElementById('search-count');
+  if(q){
+    var rCnt = RESTS.filter(function(r){
+      return r.name.toLowerCase().indexOf(q)>=0||r.city.toLowerCase().indexOf(q)>=0||r.region.toLowerCase().indexOf(q)>=0||r.dishes.some(function(d){return d.toLowerCase().indexOf(q)>=0;});
+    }).length;
+    var dCnt = DISHES.filter(function(d){ return d.name.toLowerCase().indexOf(q)>=0||(d.fmt||'').toLowerCase().indexOf(q)>=0; }).length;
+    cntEl.textContent = (rCnt+dCnt)+' result'+(rCnt+dCnt!==1?'s':'');
+    cntEl.style.display = 'block';
+  } else {
+    cntEl.style.display = 'none';
+  }
 }
 
 function renderRegionMode(el, q){
@@ -1563,6 +1602,14 @@ function renderRegionMode(el, q){
     var rcProv = document.createElement('div'); rcProv.className='rc-province'; rcProv.textContent=provShort;
     var rcCnt = document.createElement('div'); rcCnt.className='rc-count'; rcCnt.textContent=cnt+' spot'+(cnt!==1?'s':'');
     card.appendChild(rcIco); card.appendChild(rcNm); card.appendChild(rcProv); card.appendChild(rcCnt);
+    // Food photo thumbnail from first matching dish with a photo
+    var repDish = DISHES.find(function(d){ return d.region===reg.key && d.photo; });
+    if(repDish){
+      var thumb = document.createElement('img');
+      thumb.src = repDish.photo; thumb.className = 'rc-thumb';
+      thumb.onerror = function(){ if(this.parentNode) this.parentNode.removeChild(this); };
+      card.appendChild(thumb);
+    }
     card.onclick = function(){ openRegion(reg.key); };
     grid.appendChild(card);
   });
@@ -1742,10 +1789,20 @@ function openRestDetail(r){
   var subLine = r.city;
   if(r.halal) subLine += ' · 🌙 Halal';
   if(r.mich) subLine += ' · ⭐ Michelin';
-  if(r.yelp_rating) subLine += ' · ★ ' + r.yelp_rating.toFixed(1);
+  if(r.google_rating) subLine += ' · ★' + r.google_rating.toFixed(1) + (r.google_count ? ' ('+r.google_count.toLocaleString()+' reviews)' : '');
   if(r.price) subLine += ' · ' + r.price;
   document.getElementById('rest-sub').textContent = subLine;
-  document.getElementById('rest-hero').style.background = 'linear-gradient(135deg, '+color+'dd, #2C1810)';
+  var heroEl = document.getElementById('rest-hero');
+  var heroPhoto = r.photos && (r.photos.exterior || r.photos.food1 || r.photos.food2);
+  if(heroPhoto){
+    heroEl.style.backgroundImage = 'url('+heroPhoto+')';
+    heroEl.style.backgroundSize = 'cover';
+    heroEl.style.backgroundPosition = 'center';
+    // Gradient overlay so text remains readable
+    heroEl.style.background = 'linear-gradient(to bottom, rgba(44,24,16,0.45) 0%, rgba(44,24,16,0.88) 100%), url('+heroPhoto+') center/cover no-repeat';
+  } else {
+    heroEl.style.background = 'linear-gradient(135deg, '+color+'dd, #2C1810)';
+  }
 
   // Photo strip
   var photosEl = document.getElementById('rest-photos');
@@ -1896,6 +1953,28 @@ function openRestDetail(r){
   if(r.notes){ ns.style.display=''; document.getElementById('rest-notes').textContent=r.notes; }
   else ns.style.display='none';
 
+  // Press section
+  var pressEntries = PRESS[r.id] || [];
+  var pressSec = document.getElementById('rest-press-sec');
+  var pressEl = document.getElementById('rest-press');
+  pressEl.innerHTML = '';
+  if(pressEntries.length){
+    pressSec.style.display = '';
+    pressEntries.forEach(function(p){
+      var a = document.createElement('a');
+      a.href = p.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+      a.className = 'press-entry';
+      var pub = document.createElement('div'); pub.className='press-pub'; pub.textContent=p.publication;
+      var hl = document.createElement('div'); hl.className='press-headline'; hl.textContent=p.headline;
+      a.appendChild(pub); a.appendChild(hl);
+      if(p.excerpt){ var ex=document.createElement('div'); ex.className='press-excerpt'; ex.textContent='"'+p.excerpt+'"'; a.appendChild(ex); }
+      if(p.dishMentioned){ var dm=document.createElement('div'); dm.className='press-dish'; dm.textContent='📰 Mentions: '+p.dishMentioned; a.appendChild(dm); }
+      pressEl.appendChild(a);
+    });
+  } else {
+    pressSec.style.display = 'none';
+  }
+
   updateFavBtn();
   showScreen('s-rest', true);
 }
@@ -1935,6 +2014,7 @@ function toggleFavCard(e, id){
 }
 
 function toggleFavId(id){
+  if(navigator.vibrate) navigator.vibrate(10);
   var idx = favs.indexOf(id);
   if(idx>=0) favs.splice(idx,1); else favs.push(id);
   saveFavs();
@@ -2040,12 +2120,21 @@ function makeDishCard(d){
   var nm = document.createElement('div'); nm.className='dish-card-name'; nm.textContent=d.name;
   var meta = document.createElement('div'); meta.className='dish-card-meta';
   meta.textContent = d.fmt || d.region || '';
+  // Region tags from enrich_dish_descriptions.py
+  if(d.regionTags && d.regionTags.length){
+    var rtagEl = document.createElement('div');
+    rtagEl.style.cssText='font-size:10px;color:var(--gold);font-weight:600;margin-top:2px;letter-spacing:.3px';
+    rtagEl.textContent = d.regionTags.join(' · ');
+    meta.appendChild(document.createTextNode(' · '));
+    meta.appendChild(rtagEl);
+  }
   body.appendChild(nm); body.appendChild(meta);
-  if(d.desc){
+  var descText = d.description || d.desc;
+  if(descText){
     var dsc = document.createElement('div');
-    dsc.style.cssText='font-size:11px;color:var(--ink-muted);line-height:1.5;margin-top:3px;'
+    dsc.style.cssText='font-size:11px;color:var(--ink-soft);font-style:italic;line-height:1.5;margin-top:4px;'
       +'display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden';
-    dsc.textContent = d.desc;
+    dsc.textContent = descText;
     body.appendChild(dsc);
   }
   var cntEl = document.createElement('div'); cntEl.className='dish-card-count';
@@ -2065,8 +2154,8 @@ function makeRestCard(r){
   var accent = document.createElement('div'); accent.className='rest-accent'; accent.style.background=col;
   card.appendChild(accent);
 
-  // Photo (exterior or first available)
-  var photoUrl = r.photos && (r.photos.exterior || r.photos.food1);
+  // Photo (food photos first — more appetizing than storefronts)
+  var photoUrl = r.photos && (r.photos.food1 || r.photos.food2 || r.photos.exterior || r.photos.interior);
   if(photoUrl){
     var photoEl = document.createElement('div'); photoEl.className='rest-card-photo';
     var img = document.createElement('img'); img.src=photoUrl; img.alt=r.name;
@@ -2089,7 +2178,8 @@ function makeRestCard(r){
   meta.appendChild(regBadge);
   if(r.halal){ var hb=document.createElement('span'); hb.className='badge badge-halal'; hb.textContent='🌙 Halal'; meta.appendChild(hb); }
   if(r.mich){ var mb=document.createElement('span'); mb.className='badge badge-michelin'; mb.textContent='⭐ Michelin'; meta.appendChild(mb); }
-  if(r.yelp_rating){ var rb=document.createElement('span'); rb.className='badge badge-rating'; rb.textContent='★ '+r.yelp_rating.toFixed(1); meta.appendChild(rb); }
+  if(PRESS[r.id] && PRESS[r.id].length){ var prb=document.createElement('span'); prb.className='badge badge-press'; prb.textContent='📰 Press'; meta.appendChild(prb); }
+  if(r.google_rating){ var rb=document.createElement('span'); rb.className='badge badge-rating'; rb.textContent='★ '+r.google_rating.toFixed(1)+(r.google_count?' ('+r.google_count.toLocaleString()+')':''); meta.appendChild(rb); }
   if(r.price){ var pb=document.createElement('span'); pb.className='rest-price'; pb.textContent=r.price; meta.appendChild(pb); }
   // Open/Closed status
   var openStatus = isOpenNow(r.hours);
@@ -2204,6 +2294,24 @@ window.addEventListener('load', function(){
 // ═══════════════════════════════════════════════════
 // BOOTSTRAP — fetch live data then init
 // ═══════════════════════════════════════════════════
+function renderSkeleton(){
+  var scroll = document.getElementById('home-scroll');
+  if(!scroll) return;
+  scroll.innerHTML = '';
+  var g = document.createElement('div'); g.className='rest-list';
+  for(var i=0;i<5;i++){
+    var c = document.createElement('div'); c.className='rest-card'; c.style.pointerEvents='none';
+    var sp = document.createElement('div'); sp.className='skel skel-photo'; c.appendChild(sp);
+    var b = document.createElement('div'); b.style.cssText='padding:14px 16px 18px';
+    var l1=document.createElement('div'); l1.className='skel skel-line'; l1.style.width='70%'; b.appendChild(l1);
+    var l2=document.createElement('div'); l2.className='skel skel-line short'; b.appendChild(l2);
+    c.appendChild(b);
+    g.appendChild(c);
+  }
+  scroll.appendChild(g);
+}
+renderSkeleton();
+
 (function() {
   var overlay = document.getElementById('loading-overlay');
 
@@ -2259,8 +2367,8 @@ window.addEventListener('load', function(){
       address: r.address || '',
       hours:  r.hours || {},
       yelpId: r.yelpId || r.yelp_id || '',
-      yelp_rating: r.yelpRating || r.yelp_rating || null,
-      yelp_count:  r.yelpReviewCount || r.yelp_review_count || null,
+      google_rating: r.googleRating || r.google_rating || null,
+      google_count:  r.googleReviewCount || r.google_review_count || null,
       sources:      r.sources || [],
       reviewDishes: r.reviewDishes || []  // from Google reviews + Claude
     };
@@ -2292,6 +2400,10 @@ window.addEventListener('load', function(){
 
       hideOverlay();
       renderHome();
+      // Load press data in background (non-blocking)
+      fetch('data/press.json').then(function(r){ return r.ok ? r.json() : null; }).then(function(d){
+        if(d && d.byRestaurant) PRESS = d.byRestaurant;
+      }).catch(function(){});
     })
     .catch(function(err) {
       console.error('[626 Eats] Failed to load restaurants.json:', err.message);
@@ -2306,6 +2418,21 @@ window.addEventListener('load', function(){
       overlay.classList.remove('hidden');
       overlay.style.display = 'flex';
     });
+})();
+
+// ═══════════════════════════════════════════════════
+// SWIPE BACK GESTURE
+// ═══════════════════════════════════════════════════
+(function(){
+  var swipeStartX = 0;
+  document.addEventListener('touchstart', function(e){
+    swipeStartX = e.touches[0].clientX;
+  }, {passive:true});
+  document.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - swipeStartX;
+    // Right swipe starting from left edge (within 44px) → go back
+    if(dx > 80 && swipeStartX < 44 && stack.length > 0) goBack();
+  }, {passive:true});
 })();
 
 </script>

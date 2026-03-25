@@ -37,7 +37,7 @@ ENV VARS:
   SPREADSHEET_ID                  Required
 """
 
-import os, sys, json, time, argparse
+import os, sys, json, time, argparse, re
 import anthropic
 import gspread
 from google.oauth2.service_account import Credentials
@@ -58,10 +58,16 @@ COL_STATUS     = 3   # D
 COL_CITY       = 5   # F
 COL_REGION     = 9   # J
 COL_SUBREGION  = 10  # K
+COL_PROVINCE   = 11  # L
 COL_DISH1      = 26  # AA
 COL_DISH2      = 27  # AB
 COL_DISH3      = 28  # AC
 COL_NOTES      = 36  # AK
+# Enriched dish columns (from Google reviews + Claude)
+COL_DISH1_NAME = 41  # AP
+COL_DISH2_NAME = 44  # AS
+COL_DISH3_NAME = 47  # AV
+# Confidence is stored inline in the AI notes field: [AI: ... confidence:high]
 
 # ── The 12 valid regions and their subregions ──────────────────────────────────
 TAXONOMY = {
@@ -145,8 +151,13 @@ def classify_restaurant(client, name_en, name_zh, city, dishes, notes):
     """
     Send restaurant info to Claude and get back region + subregion + confidence.
     Returns (region, subregion, confidence, reasoning) tuple.
+
+    Improvements over v1:
+    - Chinese name is emphasized as the primary signal (e.g. 成都小吃 → Sichuan is unambiguous)
+    - All enriched dish names are included (not just manual columns)
+    - No keyword fallback — always uses Claude for accuracy
     """
-    dish_str = ", ".join(filter(None, [dishes[0], dishes[1], dishes[2]])) or "unknown"
+    dish_str = ", ".join(filter(None, dishes)) or "unknown"
 
     prompt = f"""You are an expert on Chinese regional cuisine, specifically the San Gabriel Valley restaurant scene in Los Angeles.
 
@@ -154,10 +165,15 @@ Classify this restaurant into the correct region and subregion from the taxonomy
 
 RESTAURANT:
   English name: {name_en}
-  Chinese name: {name_zh or "unknown"}
+  Chinese name: {name_zh or "(not available)"}
   City: {city}, CA
-  Dishes mentioned in reviews: {dish_str}
+  Dishes from reviews: {dish_str}
   Notes: {notes or "none"}
+
+IMPORTANT: The Chinese name is often the single most reliable classification signal.
+Examples: 成都 (Chengdu) → Sichuan, 潮州/汕头 (Chaoshan) → Teochew, 上海 (Shanghai) → Shanghainese,
+新疆/维吾尔 → Northwestern, 港式 (Hong Kong style) → Hong Kong, 台灣/台式 → Taiwanese,
+兰州拉面 → Northwestern (Lanzhou noodle), 北京烤鸭 → Northern Chinese, 云南 → Southwestern
 
 VALID TAXONOMY (you must choose from these exactly):
 {TAXONOMY_TEXT}
@@ -167,15 +183,15 @@ Respond with JSON only, no other text:
   "region": "exact region name from taxonomy",
   "subregion": "exact subregion name from taxonomy",
   "confidence": "high" | "medium" | "low",
-  "reasoning": "one sentence explaining your classification"
+  "reasoning": "one sentence explaining your classification, citing the strongest evidence"
 }}
 
 Rules:
 - region and subregion must be copied exactly from the taxonomy above
-- Use "high" confidence when the name or dishes make it obvious
-- Use "medium" when you're fairly sure but it could be another region
-- Use "low" when it's a generic Chinese restaurant with no clear regional signals
-- If truly ambiguous, default to Cantonese / Classic Cantonese (most common in SGV)"""
+- "high": Chinese name, specific regional dishes, or description make it unambiguous
+- "medium": good indicators but could be another region
+- "low": generic name, no specific regional signals — flag for manual review
+- Only default to Cantonese if truly no other signals exist (do not over-apply this default)"""
 
     response = client.messages.create(
         model="claude-sonnet-4-20250514",
@@ -222,7 +238,7 @@ def get_sheet():
             "https://www.googleapis.com/auth/drive",
         ]
     )
-    gc = gspread.authorize(creds)
+    gc = gspread.Client(auth=creds)
     return gc.open_by_key(SPREADSHEET_ID).worksheet("Restaurants")
 
 def safe_get(row, idx, default=""):
@@ -236,11 +252,15 @@ def safe_get(row, idx, default=""):
 
 def main():
     parser = argparse.ArgumentParser(description="AI region classifier for 626 Eats")
-    parser.add_argument("--dry-run",    action="store_true",
+    parser.add_argument("--dry-run",       action="store_true",
                         help="Preview classifications without writing to Sheet")
-    parser.add_argument("--reclassify", action="store_true",
-                        help="Re-classify even already-classified rows")
-    parser.add_argument("--limit",      type=int, default=0,
+    parser.add_argument("--reclassify",    action="store_true",
+                        help="Re-classify ALL rows (even already-classified)")
+    parser.add_argument("--reclass-low",   action="store_true",
+                        help="Re-classify rows with low confidence (have '[AI:' and 'confidence:low')")
+    parser.add_argument("--reclass-medium", action="store_true",
+                        help="Re-classify rows with low or medium confidence")
+    parser.add_argument("--limit",         type=int, default=0,
                         help="Only process first N rows (for testing)")
     args = parser.parse_args()
 
@@ -264,10 +284,19 @@ def main():
         status  = safe_get(row, COL_STATUS)
         region  = safe_get(row, COL_REGION)
         name_en = safe_get(row, COL_NAME_EN)
+        notes   = safe_get(row, COL_NOTES)
 
-        if not name_en or status == "CLOSED":
+        if not name_en or status.upper() in ("CLOSED", "PERMANENTLY CLOSED"):
             continue
-        if region == "NEEDS CLASSIFICATION" or args.reclassify:
+
+        needs = region == "NEEDS CLASSIFICATION"
+        is_low    = "[AI:" in notes and "confidence:low"    in notes.lower()
+        is_medium = "[AI:" in notes and "confidence:medium" in notes.lower()
+
+        if (needs
+                or args.reclassify
+                or (args.reclass_low    and (is_low or needs))
+                or (args.reclass_medium and (is_low or is_medium or needs))):
             to_classify.append((i, row))
         if args.limit and len(to_classify) >= args.limit:
             break
@@ -295,11 +324,16 @@ def main():
         name_en  = safe_get(row, COL_NAME_EN)
         name_zh  = safe_get(row, COL_NAME_ZH)
         city     = safe_get(row, COL_CITY)
-        dishes   = [
-            safe_get(row, COL_DISH1),
-            safe_get(row, COL_DISH2),
-            safe_get(row, COL_DISH3),
+        # Use both manual dish columns AND enriched review dishes (deduped)
+        dishes_raw = [
+            safe_get(row, COL_DISH1), safe_get(row, COL_DISH2), safe_get(row, COL_DISH3),
+            safe_get(row, COL_DISH1_NAME), safe_get(row, COL_DISH2_NAME), safe_get(row, COL_DISH3_NAME),
         ]
+        seen_d = set()
+        dishes = []
+        for d in dishes_raw:
+            if d and d not in seen_d:
+                seen_d.add(d); dishes.append(d)
         notes    = safe_get(row, COL_NOTES)
 
         print(f"  [{idx+1}/{total}] {name_en} ({city})", end=" ... ", flush=True)
@@ -320,9 +354,8 @@ def main():
         if not args.dry_run:
             # Build updated notes with AI reasoning
             new_notes = notes
-            reasoning_note = f"[AI: {reasoning}]"
+            reasoning_note = f"[AI: {reasoning} confidence:{confidence}]"
             if "[AI:" in new_notes:
-                import re
                 new_notes = re.sub(r"\[AI:.*?\]", reasoning_note, new_notes)
             else:
                 new_notes = (new_notes + " " + reasoning_note).strip()
