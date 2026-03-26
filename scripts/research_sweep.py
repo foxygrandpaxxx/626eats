@@ -212,13 +212,57 @@ DISH_VOCAB = {
 }
 
 def extract_dishes(text):
-    """Find dish mentions in text, return top 5 most-mentioned."""
+    """
+    Find dish mentions in text, return top 5 most-mentioned.
+    Dishes mentioned 3+ times are assumed genuine (volume = popularity signal).
+    Dishes mentioned 1-2 times are filtered for negative sentiment context.
+    """
     text_lower = text.lower()
     counts = Counter()
     for dish in DISH_VOCAB:
         if dish in text_lower:
             counts[dish] += text_lower.count(dish)
-    return [d.title() for d, _ in counts.most_common(5)]
+
+    # Sentiment filter: for low-mention dishes, check surrounding context
+    candidates = counts.most_common()
+    filtered = []
+    for dish, cnt in candidates:
+        if cnt >= 3:
+            # High mention count — almost certainly popular, include unconditionally
+            filtered.append((dish, cnt))
+        else:
+            # Check each sentence containing the dish for negation context
+            if not _is_negatively_mentioned(dish, text_lower):
+                filtered.append((dish, cnt))
+
+    return [d.title() for d, _ in sorted(filtered, key=lambda x: -x[1])[:5]]
+
+
+# Negation patterns: if any of these appear within ~60 chars before the dish mention,
+# the mention is likely negative.
+_NEGATION_PATTERNS = re.compile(
+    r"\b(not|never|no|didn['\u2019]t|don['\u2019]t|won['\u2019]t|wasn['\u2019]t|"
+    r"avoid|skip|overrated|disappointing|terrible|awful|bad|worst|poor|mediocre|"
+    r"couldn['\u2019]t|wouldn['\u2019]t|shouldn['\u2019]t|didn['\u2019]t order|"
+    r"stay away|steer clear)\b",
+    re.IGNORECASE
+)
+
+
+def _is_negatively_mentioned(dish, text_lower):
+    """
+    Returns True if ALL mentions of `dish` in text appear in a negative context.
+    A mention is negative if a negation word appears within 60 chars before it.
+    """
+    import re as _re
+    positive_found = False
+    for m in _re.finditer(re.escape(dish), text_lower):
+        window_start = max(0, m.start() - 80)
+        window = text_lower[window_start:m.start() + len(dish) + 20]
+        if not _NEGATION_PATTERNS.search(window):
+            positive_found = True
+            break
+    return not positive_found
 
 def merge_dishes(primary, secondary):
     """

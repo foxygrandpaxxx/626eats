@@ -12,7 +12,7 @@ Local usage:
     GOOGLE_SERVICE_ACCOUNT_JSON='...' SPREADSHEET_ID=... python scripts/export_json.py
 """
 
-import os, json
+import os, json, re
 from datetime import datetime
 from pathlib import Path
 
@@ -63,6 +63,9 @@ REST_COLS = {
     "date_added":    39,  # AM
     "date_verified": 40,  # AN
     "added_by":      41,  # AO
+    # Ratings (written by refresh_ratings.py) — add these headers to row 3 of your sheet
+    "google_rating":       54,  # BB
+    "google_review_count": 55,  # BC
     # Dish columns (enriched from Google reviews + Claude)
     "dish1_name":    42,  # AP
     "dish1_cat":     43,  # AQ
@@ -157,7 +160,7 @@ def export():
             "sources":       parse_list(get_cell(row, LINK_COLS["sources"])),
             "photoUrl":      get_cell(row, LINK_COLS["photo"]),
             "note":          get_cell(row, LINK_COLS["note"]),
-            "formatGroup":   get_cell(row, LINK_COLS["format_group"]),
+            "formatGroup":   '' if re.match(r'^\d{4}-\d{2}-\d{2}$', str(get_cell(row, LINK_COLS["format_group"]))) else get_cell(row, LINK_COLS["format_group"]),
             "reviewSummary": get_cell(row, LINK_COLS["review_summary"]),
         })
 
@@ -248,6 +251,8 @@ def export():
             "googlePlaceId": get_cell(row, REST_COLS["google_id"]) or None,
             "yelpId":        get_cell(row, REST_COLS["yelp_id"]) or None,
             "dianpingId":    get_cell(row, REST_COLS["dianping_id"]) or None,
+            "googleRating":      parse_float(get_cell(row, REST_COLS["google_rating"])),
+            "googleReviewCount": int(get_cell(row, REST_COLS["google_review_count"]) or 0) or None,
             "notes":   get_cell(row, REST_COLS["notes"]) or None,
             "sources": parse_list(get_cell(row, REST_COLS["sources"])),
             "dateAdded":    get_cell(row, REST_COLS["date_added"]) or None,
