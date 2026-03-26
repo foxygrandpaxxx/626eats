@@ -135,6 +135,17 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
   display:flex;align-items:center;gap:8px}
 .fmt-label::after{content:'';flex:1;height:1px;background:rgba(201,150,58,0.25)}
 
+/* ── CATEGORY DROPDOWN ── */
+.cat-dropdown-wrap{padding:10px 16px 2px;flex-shrink:0}
+.cat-dropdown{width:100%;appearance:none;-webkit-appearance:none;
+  background:var(--cream) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 14px center;
+  border:1.5px solid var(--border-mid);border-radius:12px;
+  padding:10px 38px 10px 14px;font-size:13px;font-weight:500;
+  color:var(--ink);font-family:'DM Sans',sans-serif;cursor:pointer;
+  transition:border-color .16s}
+.cat-dropdown:focus{outline:none;border-color:var(--gold)}
+.cat-dropdown.active{border-color:var(--gold);background-color:rgba(201,150,58,0.07)}
+
 /* ── REGION CARDS ── */
 .region-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:2px 16px 0}
 .region-card{background:var(--cream);border-radius:var(--radius);
@@ -253,7 +264,9 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
   border-radius:8px;padding:4px 11px;font-size:11px;color:#7a5c1e}
 .dish-rows{display:flex;flex-direction:column;gap:8px}
 .dish-row{background:var(--cream);border:1px solid var(--border);
-  border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px}
+  border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;
+  cursor:pointer;transition:background .15s,border-color .15s}
+.dish-row:active{background:var(--bg2);border-color:var(--gold)}
 .dish-row-num{font-family:'Playfair Display',serif;font-size:18px;font-weight:900;
   color:var(--gold);line-height:1;width:22px;flex-shrink:0}
 .dish-row-name{font-size:14px;font-weight:500;color:var(--ink);flex:1}
@@ -547,7 +560,11 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
     <div class="hdr-title" id="region-hdr"></div>
     <div class="hdr-actions"><button class="hdr-btn" onclick="mapRegion()">🗺 Map</button></div>
   </div>
-  <div class="dish-chips" id="dish-chips" style="flex-shrink:0"></div>
+  <div class="cat-dropdown-wrap" style="flex-shrink:0">
+    <select class="cat-dropdown" id="dish-chips" onchange="onDishDropdown(this)">
+      <option value="">All Dishes</option>
+    </select>
+  </div>
   <div class="scroll">
     <div class="sec-hdr">
       <h2 id="region-list-h">Restaurants</h2>
@@ -1618,16 +1635,19 @@ function renderRegionMode(el, q){
 }
 
 function renderDishMode(el, q){
-  // Filter chips
+  // Category dropdown
   var frow = document.getElementById('home-filter-row');
   frow.innerHTML = '';
+  var wrap = document.createElement('div'); wrap.className='cat-dropdown-wrap'; wrap.style.width='100%';
+  var sel = document.createElement('select'); sel.className='cat-dropdown'+(fmtFilter!=='All'?' active':'');
   FORMATS.forEach(function(f){
-    var chip = document.createElement('span');
-    chip.className = 'filter-chip'+(fmtFilter===f?' on':'');
-    chip.textContent = f;
-    chip.onclick = function(){ fmtFilter=f; renderHome(); };
-    frow.appendChild(chip);
+    var opt = document.createElement('option');
+    opt.value = f; opt.textContent = f==='All'?'All Categories':f;
+    if(f===fmtFilter) opt.selected=true;
+    sel.appendChild(opt);
   });
+  sel.onchange = function(){ fmtFilter=this.value; renderHome(); };
+  wrap.appendChild(sel); frow.appendChild(wrap);
 
   var dishes = DISHES;
   if(q) dishes = dishes.filter(function(d){
@@ -1680,28 +1700,27 @@ function openRegion(key){
   showScreen('s-region', true);
 }
 
+function onDishDropdown(sel){
+  curDishFilter = sel.value || null;
+  sel.className = 'cat-dropdown' + (curDishFilter ? ' active' : '');
+  renderRegionList(RESTS.filter(function(r){ return r.region===curRegion; }));
+}
+
 function renderDishChips(rests){
   var allD = [];
   var seen = {};
   rests.forEach(function(r){ r.dishes.forEach(function(d){ if(!seen[d]){ seen[d]=true; allD.push(d); } }); });
-  var row = document.getElementById('dish-chips');
-  row.innerHTML = '';
-  function makeChip(label, isAll){
-    var c = document.createElement('span');
-    c.className = 'dish-chip'+(( isAll ? curDishFilter===null : curDishFilter===label)?'  on':'');
-    c.textContent = label.length>22?label.slice(0,20)+'…':label;
-    c.onclick = function(){
-      curDishFilter = isAll?null:label;
-      document.querySelectorAll('.dish-chip').forEach(function(x){x.classList.remove('on');});
-      c.classList.add('on');
-      renderRegionList(RESTS.filter(function(r){ return r.region===curRegion; }));
-    };
-    return c;
-  }
-  var all = makeChip('All Dishes', true);
-  all.classList.add('on');
-  row.appendChild(all);
-  allD.slice(0,14).forEach(function(d){ row.appendChild(makeChip(d,false)); });
+  var sel = document.getElementById('dish-chips');
+  sel.innerHTML = '';
+  var allOpt = document.createElement('option'); allOpt.value=''; allOpt.textContent='All Dishes';
+  sel.appendChild(allOpt);
+  allD.forEach(function(d){
+    var opt = document.createElement('option'); opt.value=d; opt.textContent=d;
+    if(d===curDishFilter) opt.selected=true;
+    sel.appendChild(opt);
+  });
+  sel.value = curDishFilter || '';
+  sel.className = 'cat-dropdown' + (curDishFilter ? ' active' : '');
 }
 
 function renderRegionList(rests){
@@ -1724,18 +1743,25 @@ function mapRegion(){
 // ═══════════════════════════════════════════════════
 function openDishDetail(d){
   curDish = d;
-  var reg = RMap[d.region];
+  // Pick a color from the first region tag, fallback to red
+  var regionName = (d.regionTags && d.regionTags[0]) || d.region || '';
+  var reg = RMap[regionName];
   var color = reg ? reg.color : '#C85450';
   document.getElementById('dish-hdr').textContent = d.name;
   document.getElementById('dish-icon').textContent = d.icon||'🍽';
   document.getElementById('dish-name-h').textContent = d.name;
-  document.getElementById('dish-origin').textContent = d.fmt||d.region||'';
+  // Show category + region tags in subline
+  var originParts = [];
+  if(d.fmt) originParts.push(d.fmt);
+  if(d.regionTags && d.regionTags.length) originParts.push(d.regionTags.join(' · '));
+  document.getElementById('dish-origin').textContent = originParts.join(' — ');
   document.getElementById('dish-hero').style.background = 'linear-gradient(135deg, '+color+'dd, #2C1810)';
-  document.getElementById('dish-desc').textContent = d.desc;
+  document.getElementById('dish-desc').textContent = d.description || d.desc || '';
 
+  // Region tags displayed as flavor-tag pills (reusing existing style)
   var ft = document.getElementById('dish-flavors');
   ft.innerHTML = '';
-  d.flavors.forEach(function(f){
+  (d.regionTags || []).forEach(function(f){
     var t = document.createElement('span'); t.className='flavor-tag'; t.textContent=f; ft.appendChild(t);
   });
 
@@ -1878,6 +1904,11 @@ function openRestDetail(r){
         b.textContent = '🏆 Best';
         topLine.appendChild(b);
       }
+      // Chevron indicates tappable
+      var chev = document.createElement('div');
+      chev.style.cssText = 'color:var(--border-mid);font-size:13px;flex-shrink:0;margin-left:2px';
+      chev.textContent = '›';
+      topLine.appendChild(chev);
 
       if(d.category){
         var chip = document.createElement('span');
@@ -1888,6 +1919,13 @@ function openRestDetail(r){
         chip.textContent = d.category;
         topLine.appendChild(chip);
       }
+
+      // Tap to open dish detail if we have a DISHES entry for it
+      row.onclick = function(){
+        var dishName = d.name;
+        var found = DISHES.find(function(x){ return x.name===dishName; });
+        if(found) openDishDetail(found);
+      };
 
       row.appendChild(topLine);
 
