@@ -1,26 +1,28 @@
 name: Press Sweep
 
-# Search for press coverage (Eater LA, LA Times, Timeout, etc.) for all restaurants.
-# Run manually to discover new press mentions. Uses Serper API (free trial: 2,500 queries).
-# After sweep, exports press.json which the app loads to show press badges.
+# Search for press coverage (Eater LA, LA Times, Timeout, The Infatuation, etc.)
+# Uses Claude's built-in web search tool — no separate search API key needed.
+# Claude reads the full article text and extracts structured data directly.
+#
+# Cost: ~$0.50–$1.00 to sweep all 273 restaurants (Claude Haiku + web search).
+# Re-run quarterly or after adding new restaurants.
 #
 # Required secrets:
-#   SERPER_API_KEY               - from serper.dev (free trial available)
-#   ANTHROPIC_API_KEY            - Claude API key (for confirmation + extraction)
+#   ANTHROPIC_API_KEY            - Claude API key (web search + extraction)
 #   GOOGLE_SERVICE_ACCOUNT_JSON  - for Sheets read/write
 #   SPREADSHEET_ID               - Google Sheets ID
 on:
   workflow_dispatch:
     inputs:
       restaurant:
-        description: 'Sweep single restaurant (partial name match, optional)'
+        description: 'Sweep single restaurant (partial name match, leave blank for all)'
         required: false
         default: ''
 
 jobs:
   press-sweep:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -34,13 +36,12 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests gspread google-auth
+        run: pip install gspread google-auth
 
       - name: Run press sweep
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
-          SERPER_API_KEY: ${{ secrets.SERPER_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           if [ -n "${{ github.event.inputs.restaurant }}" ]; then
@@ -55,7 +56,7 @@ jobs:
           SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
         run: python scripts/export_press.py
 
-      - name: Commit and push
+      - name: Commit and push press.json
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "626 Eats Bot"

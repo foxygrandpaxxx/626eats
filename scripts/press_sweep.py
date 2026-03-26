@@ -2,81 +2,58 @@
 """
 scripts/press_sweep.py
 ----------------------
-Searches for press coverage (Eater LA, LA Times, Timeout, The Infatuation,
-Thrillist, LA Weekly, LA Magazine, etc.) for each restaurant in the spreadsheet.
-Uses Serper API for web search + Claude for confirmation and excerpt extraction.
+Finds press coverage for each restaurant using Claude's built-in web search tool.
+Claude searches Eater LA, LA Times, Timeout, The Infatuation, etc., reads the
+actual article pages, and extracts structured data — no separate search API needed.
 
-For each restaurant, runs 2 search queries:
-  1. "[name]" SGV site:eater.com OR site:latimes.com OR ...
-  2. "[name]" "San Gabriel" food review
-
-Claude confirms whether each result is actually about this restaurant,
-then extracts: publication, headline, excerpt, dish_mentioned, date.
+For each restaurant, Claude:
+  1. Searches food publications for reviews and features
+  2. Reads the full article text (not just snippets)
+  3. Extracts: publication, headline, excerpt, dishes mentioned, date, sentiment
 
 Results are written to a "Press" sheet in Google Sheets:
-  rest_id | rest_name | publication | headline | url | dish_mentioned | excerpt | date | date_swept
+  press_id | rest_id | rest_name | publication | headline | url |
+  dish_mentioned | excerpt | date | date_swept | sentiment
 
 Required secrets:
   GOOGLE_SERVICE_ACCOUNT_JSON  – service account JSON
   SPREADSHEET_ID               – Google Sheets spreadsheet ID
-  SERPER_API_KEY               – Serper API key (serper.dev — 2,500 free queries on trial)
-  ANTHROPIC_API_KEY            – Claude API key for confirmation + extraction
+  ANTHROPIC_API_KEY            – Claude API key (uses web search + claude-3-5-haiku)
+                                 Cost: ~$0.50–$1.00 for all 273 restaurants
 
 Local usage:
-  GOOGLE_SERVICE_ACCOUNT_JSON='...' SPREADSHEET_ID=... SERPER_API_KEY=... ANTHROPIC_API_KEY=... python scripts/press_sweep.py
+  GOOGLE_SERVICE_ACCOUNT_JSON='...' SPREADSHEET_ID=... ANTHROPIC_API_KEY=... python scripts/press_sweep.py
 
 Options:
-  --all         Re-sweep all restaurants (default: only unsearched ones)
-  --restaurant  NAME  Sweep a single restaurant by name (partial match)
+  --all                  Re-sweep all restaurants (default: only unsearched ones)
+  --restaurant NAME      Sweep a single restaurant by name (partial match)
 
 GitHub Actions trigger:
-  workflow_dispatch (manual) or after research_sweep adds new restaurants.
+  workflow_dispatch (manual). Re-run quarterly or after adding new restaurants.
 """
 
 import os, json, time, re, sys
 import urllib.request
-import urllib.parse
 from datetime import datetime
 
 SA_JSON        = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON", "")
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID", "")
-SERPER_KEY     = os.environ.get("SERPER_API_KEY", "")
 ANTHROPIC_KEY  = os.environ.get("ANTHROPIC_API_KEY", "")
 
 DATA_START = 3  # 0-indexed row offset in get_all_values()
 
-# Publications to search (ordered by prestige)
-TARGET_SITES = [
-    "eater.com",
-    "latimes.com",
-    "timeout.com",
-    "theinfatuation.com",
-    "thrillist.com",
-    "laweekly.com",
-    "lamag.com",
-    "sfgate.com",
-    "yelp.com/blog",
+TARGET_PUBLICATIONS = [
+    "Eater LA (eater.com)",
+    "Los Angeles Times (latimes.com)",
+    "Timeout Los Angeles (timeout.com)",
+    "The Infatuation (theinfatuation.com)",
+    "Thrillist (thrillist.com)",
+    "LA Weekly (laweekly.com)",
+    "Los Angeles Magazine (lamag.com)",
+    "Yelp Blog (yelp.com/blog)",
+    "Food & Wine (foodandwine.com)",
+    "Bon Appétit (bonappetit.com)",
 ]
-
-SITE_DISPLAY = {
-    "eater.com":        "Eater LA",
-    "latimes.com":      "LA Times",
-    "timeout.com":      "Timeout LA",
-    "theinfatuation.com": "The Infatuation",
-    "thrillist.com":    "Thrillist",
-    "laweekly.com":     "LA Weekly",
-    "lamag.com":        "Los Angeles Magazine",
-    "sfgate.com":       "SFGate",
-    "yelp.com/blog":    "Yelp Blog",
-}
-
-
-def col_letter(n):
-    result = ''
-    while n > 0:
-        n, rem = divmod(n - 1, 26)
-        result = chr(65 + rem) + result
-    return result
 
 
 def get_sheets_client():
@@ -87,101 +64,75 @@ def get_sheets_client():
         raise ImportError("Run: pip install gspread google-auth")
     if not SA_JSON:
         raise ValueError("GOOGLE_SERVICE_ACCOUNT_JSON not set")
-    creds_dict = json.loads(SA_JSON)
-    scopes = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
+    creds = Credentials.from_service_account_info(
+        json.loads(SA_JSON),
+        scopes=[
+            "https://spreadsheets.google.com/feeds",
+            "https://www.googleapis.com/auth/drive",
+        ],
+    )
     return gspread.Client(auth=creds)
 
 
-def serper_search(query, num=5):
-    """Run a Google search via Serper API. Returns list of result dicts."""
-    if not SERPER_KEY:
-        return []
-    payload = json.dumps({"q": query, "num": num, "gl": "us", "hl": "en"}).encode()
-    req = urllib.request.Request(
-        "https://google.serper.dev/search",
-        data=payload,
-        headers={
-            "X-API-KEY": SERPER_KEY,
-            "Content-Type": "application/json",
-        },
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=12) as resp:
-            data = json.loads(resp.read())
-        return data.get("organic", [])
-    except Exception as e:
-        print(f"    Serper error: {e}")
-        return []
-
-
-def fetch_article_text(url, max_chars=3000):
-    """Attempt to fetch and extract plain text from an article URL."""
-    try:
-        req = urllib.request.Request(url, headers={
-            "User-Agent": "Mozilla/5.0 (compatible; 626EatsBot/1.0)",
-        })
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            html = resp.read().decode("utf-8", errors="replace")
-        # Strip tags and collapse whitespace
-        text = re.sub(r'<[^>]+>', ' ', html)
-        text = re.sub(r'\s+', ' ', text).strip()
-        return text[:max_chars]
-    except Exception:
-        return ""
-
-
-def claude_confirm_and_extract(rest_name, city, results):
+def search_press_with_claude(rest_name, city, existing_urls):
     """
-    Use Claude to:
-    1. Filter results that are actually about this restaurant
-    2. Extract: publication, headline, excerpt (1-2 sentences), dish_mentioned, date
+    Ask Claude to use its web search tool to find press coverage for a restaurant.
+    Claude reads the actual articles and extracts structured data directly.
 
-    Returns list of dicts: {publication, headline, url, excerpt, dish_mentioned, date}
+    Returns list of dicts: {publication, headline, url, excerpt, dish_mentioned, date, sentiment}
     """
-    if not ANTHROPIC_KEY or not results:
+    if not ANTHROPIC_KEY:
         return []
 
-    results_text = ""
-    for i, r in enumerate(results):
-        results_text += f"\n[{i+1}] Title: {r.get('title','')}\n"
-        results_text += f"    URL: {r.get('link','')}\n"
-        results_text += f"    Snippet: {r.get('snippet','')}\n"
-        if r.get('article_text'):
-            results_text += f"    Article excerpt: {r['article_text'][:500]}\n"
+    publications_str = "\n".join(f"  - {p}" for p in TARGET_PUBLICATIONS)
 
-    prompt = f"""I'm checking if these search results are about a specific restaurant: "{rest_name}" in {city}, California (San Gabriel Valley area).
+    prompt = f"""I need to find press coverage for a restaurant called "{rest_name}" located in {city}, California (San Gabriel Valley area).
 
-Search results:
-{results_text}
+Please search these food publications for articles, reviews, or features about this specific restaurant:
+{publications_str}
 
-For each result, determine:
-1. Is this actually about "{rest_name}" in the SGV? (not a different restaurant with a similar name)
-2. If yes: what publication is it from, what is the headline, what's a 1-2 sentence excerpt that mentions the restaurant specifically, is any specific dish mentioned, and what is the publication date?
+Search tips:
+- Try: "{rest_name}" site:eater.com
+- Try: "{rest_name}" SGV restaurant review
+- Try: "{rest_name}" San Gabriel Valley food
+- Also try variations if the restaurant name has Chinese characters
 
-Return a JSON array. Only include results that are confirmed to be about this restaurant. Skip results that are unclear, about the wrong restaurant, or just a Yelp listing.
+For each article you find that is genuinely about "{rest_name}" (not a different restaurant):
+1. Read the article content
+2. Extract a compelling 2-3 sentence excerpt that captures what the writer loves about the restaurant
+3. Note any specific dishes mentioned by name
+4. Determine the publication and date
 
-Format:
+Skip: Yelp listings, Google Maps pages, delivery app pages, articles that only briefly mention the restaurant in a list.
+
+Already-found URLs to skip (don't re-report these):
+{chr(10).join(existing_urls) if existing_urls else "(none yet)"}
+
+Return a JSON array with this structure:
 [
   {{
-    "confirmed": true,
     "publication": "Eater LA",
-    "headline": "...",
-    "url": "...",
-    "excerpt": "One to two sentences about this restaurant from the article.",
-    "dish_mentioned": "dish name or empty string",
-    "date": "YYYY-MM-DD or empty string"
+    "headline": "The Best Dan Dan Noodles in LA Are in the SGV",
+    "url": "https://...",
+    "excerpt": "2-3 sentences from the article about this restaurant specifically.",
+    "dish_mentioned": "dan dan noodles",
+    "date": "2024-03-15",
+    "sentiment": "rave"
   }}
 ]
+
+sentiment options: "rave" (enthusiastic praise), "positive" (favorable), "mixed", "neutral" (informational only)
+
+If you find no legitimate press coverage, return an empty array: []
 
 Return only the JSON array, no other text."""
 
     payload = json.dumps({
-        "model": "claude-haiku-4-5-20251001",
-        "max_tokens": 1024,
+        "model": "claude-haiku-4-5",
+        "max_tokens": 2048,
+        "tools": [
+            {"type": "web_search_20250305", "name": "web_search"}
+        ],
         "messages": [{"role": "user", "content": prompt}],
     }).encode()
 
@@ -191,50 +142,66 @@ Return only the JSON array, no other text."""
         headers={
             "x-api-key": ANTHROPIC_KEY,
             "anthropic-version": "2023-06-01",
+            "anthropic-beta": "web-search-2025-03-05",
             "content-type": "application/json",
         },
     )
+
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=60) as resp:
             data = json.loads(resp.read())
-        text = data["content"][0]["text"].strip()
-        # Extract JSON from response
+
+        # Find the final text response (after any tool use)
+        text = ""
+        for block in data.get("content", []):
+            if block.get("type") == "text":
+                text = block["text"].strip()
+
+        if not text:
+            return []
+
         match = re.search(r'\[.*\]', text, re.DOTALL)
         if match:
-            confirmed = json.loads(match.group())
-            return [c for c in confirmed if c.get("confirmed")]
+            results = json.loads(match.group())
+            # Filter out already-seen URLs
+            return [r for r in results if r.get("url") not in existing_urls]
+
     except Exception as e:
         print(f"    Claude error: {e}")
+
     return []
 
 
 def get_or_create_press_sheet(spreadsheet):
-    """Get or create the Press worksheet."""
+    """Get or create the Press worksheet with headers."""
     try:
         return spreadsheet.worksheet("Press")
     except Exception:
-        ws = spreadsheet.add_worksheet(title="Press", rows=1000, cols=20)
+        ws = spreadsheet.add_worksheet(title="Press", rows=2000, cols=20)
         ws.append_row([
             "press_id", "rest_id", "rest_name", "publication", "headline",
-            "url", "dish_mentioned", "excerpt", "date", "date_swept", "verified"
+            "url", "dish_mentioned", "excerpt", "date", "date_swept", "sentiment",
         ])
         return ws
 
 
 def load_existing_press(press_ws):
-    """Load existing press entries keyed by URL to avoid duplicates."""
+    """Return set of already-recorded URLs and max press_id counter."""
     rows = press_ws.get_all_values()
     existing_urls = set()
+    max_id = 0
     for row in rows[1:]:  # skip header
         if len(row) >= 6 and row[5]:
             existing_urls.add(row[5].strip())
-    return existing_urls
+        if row and row[0] and row[0].startswith("P"):
+            try:
+                max_id = max(max_id, int(row[0][1:]))
+            except ValueError:
+                pass
+    return existing_urls, max_id
 
 
 def run_sweep(filter_name=None, sweep_all=False):
-    if not SERPER_KEY:
-        print("SERPER_API_KEY not set. Get a free key at https://serper.dev")
-        return
     if not ANTHROPIC_KEY:
         print("ANTHROPIC_API_KEY not set.")
         return
@@ -245,14 +212,13 @@ def run_sweep(filter_name=None, sweep_all=False):
     rest_ws = spreadsheet.worksheet("Restaurants")
     press_ws = get_or_create_press_sheet(spreadsheet)
 
-    existing_urls = load_existing_press(press_ws)
+    existing_urls, press_id_counter = load_existing_press(press_ws)
     rows = rest_ws.get_all_values()
 
     today = datetime.utcnow().strftime("%Y-%m-%d")
     new_rows = []
-    press_id_counter = press_ws.row_count  # rough counter for new IDs
-
-    sites_query = " OR ".join(f"site:{s}" for s in TARGET_SITES)
+    swept = 0
+    found = 0
 
     for i, row in enumerate(rows[DATA_START:], start=1):
         def get_cell(col):
@@ -265,81 +231,60 @@ def run_sweep(filter_name=None, sweep_all=False):
 
         if not rest_id or not name:
             continue
-
         if filter_name and filter_name.lower() not in name.lower():
             continue
 
-        print(f"[{i}] {name} ({city})")
+        print(f"[{i}] {name} ({city or 'SGV'})")
+        swept += 1
 
-        # Search queries
-        q1 = f'"{name}" SGV {sites_query}'
-        q2 = f'"{name}" "San Gabriel" food review'
+        # Pass a limited set of existing URLs to avoid re-reporting
+        results = search_press_with_claude(name, city or "San Gabriel Valley", existing_urls)
 
-        results = []
-        for q in [q1, q2]:
-            hits = serper_search(q, num=5)
-            for h in hits:
-                url = h.get("link", "")
-                if url not in existing_urls:
-                    # Try to fetch article text for better context (skip paywalled sites)
-                    if not any(s in url for s in ["latimes.com", "timeout.com"]):
-                        h["article_text"] = fetch_article_text(url)
-                        time.sleep(0.3)
-                    results.append(h)
-            time.sleep(0.4)
-
-        if not results:
-            print("  No results.")
-            continue
-
-        # Deduplicate by URL
-        seen = set()
-        unique = []
-        for r in results:
-            if r.get("link") not in seen:
-                seen.add(r.get("link"))
-                unique.append(r)
-
-        confirmed = claude_confirm_and_extract(name, city, unique)
-        if confirmed:
-            for c in confirmed:
-                url = c.get("url", "")
-                if url in existing_urls:
+        if results:
+            for r in results:
+                url = r.get("url", "")
+                if not url or url in existing_urls:
                     continue
                 press_id_counter += 1
                 new_rows.append([
                     f"P{press_id_counter:04d}",
                     rest_id,
                     name,
-                    c.get("publication", ""),
-                    c.get("headline", ""),
+                    r.get("publication", ""),
+                    r.get("headline", ""),
                     url,
-                    c.get("dish_mentioned", ""),
-                    c.get("excerpt", ""),
-                    c.get("date", ""),
+                    r.get("dish_mentioned", ""),
+                    r.get("excerpt", ""),
+                    r.get("date", ""),
                     today,
-                    "TRUE",
+                    r.get("sentiment", ""),
                 ])
                 existing_urls.add(url)
-                print(f"  ✓ {c.get('publication')}: {c.get('headline','')[:60]}")
+                sentiment_label = r.get("sentiment", "")
+                print(f"  ✓ [{sentiment_label}] {r.get('publication','')}: {r.get('headline','')[:65]}")
+                found += 1
         else:
-            print("  No confirmed press coverage found.")
+            print("  No press coverage found.")
 
-        time.sleep(0.5)
+        # Batch-write every 20 restaurants to avoid losing data if interrupted
+        if len(new_rows) >= 20:
+            press_ws.append_rows(new_rows)
+            print(f"  (Saved {len(new_rows)} entries to sheet)")
+            new_rows = []
+
+        time.sleep(1.5)  # Respect rate limits
 
     if new_rows:
-        print(f"\nAdding {len(new_rows)} new press entries to sheet...")
         press_ws.append_rows(new_rows)
-    else:
-        print("\nNo new press entries found.")
 
-    print("Done.")
+    print(f"\nDone. Swept {swept} restaurants, found {found} new press entries.")
 
 
 if __name__ == "__main__":
     filter_name = None
     sweep_all = "--all" in sys.argv
-    for arg in sys.argv[1:]:
-        if arg == "--restaurant" and sys.argv.index(arg) + 1 < len(sys.argv):
-            filter_name = sys.argv[sys.argv.index(arg) + 1]
+    args = sys.argv[1:]
+    for j, arg in enumerate(args):
+        if arg == "--restaurant" and j + 1 < len(args):
+            filter_name = args[j + 1]
     run_sweep(filter_name=filter_name, sweep_all=sweep_all)
