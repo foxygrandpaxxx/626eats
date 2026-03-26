@@ -40,12 +40,48 @@ INDEX_PATH = os.path.join(os.path.dirname(__file__), "..", "index.html")
 BATCH_SIZE = 30  # dishes per Claude API call
 
 
+def js_to_json(js_str):
+    """Convert JavaScript object literal notation to valid JSON.
+
+    Handles:
+      - Unquoted object keys:  {id:'D001'} → {"id":"D001"}
+      - Single-quoted strings: 'Ying\'s'   → "Ying's"
+    After the first enrichment run the array is written back as proper JSON,
+    so subsequent runs will hit the fast path (json.loads succeeds directly).
+    """
+    # Step 1: quote unquoted object keys  (word chars immediately before a colon)
+    result = re.sub(r'([{,])\s*(\w+)\s*:', r'\1"\2":', js_str)
+
+    # Step 2: replace single-quoted strings with double-quoted strings
+    def replace_sq(m):
+        content = m.group(1)
+        # protect escaped single-quotes, then escape any bare double-quotes,
+        # then restore the single-quotes as plain apostrophes
+        content = content.replace("\\'", "\x00SQ\x00")
+        content = content.replace('"',   '\\"')
+        content = content.replace("\x00SQ\x00", "'")
+        return '"' + content + '"'
+
+    result = re.sub(r"'((?:[^'\\]|\\.)*)'", replace_sq, result)
+
+    # Step 3: strip trailing commas before ] or }  (invalid in JSON, fine in JS)
+    result = re.sub(r',\s*([}\]])', r'\1', result)
+
+    return result
+
+
 def extract_dishes_array(html):
     """Extract the DISHES = [...] array from index.html."""
     match = re.search(r'var DISHES\s*=\s*(\[.*?\]);', html, re.DOTALL)
     if not match:
         raise ValueError("Could not find 'var DISHES = [...]' in index.html")
-    return json.loads(match.group(1)), match.start(1), match.end(1)
+    js_str = match.group(1)
+    # Try strict JSON first (works after first enrichment run writes JSON back)
+    try:
+        dishes = json.loads(js_str)
+    except json.JSONDecodeError:
+        dishes = json.loads(js_to_json(js_str))
+    return dishes, match.start(1), match.end(1)
 
 
 def claude_enrich_batch(dishes_batch):
