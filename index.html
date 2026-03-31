@@ -167,6 +167,37 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
 .rc-thumb{position:absolute;top:10px;right:10px;width:42px;height:42px;
   border-radius:8px;object-fit:cover;opacity:0.6;pointer-events:none}
 
+/* ── CUISINE CARDS ── */
+.cuisine-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:2px 16px 0}
+.cuisine-card{background:var(--cream);border-radius:var(--radius);
+  padding:14px 13px 13px;border:1px solid var(--border);cursor:pointer;
+  transition:transform .18s,box-shadow .18s;position:relative;overflow:hidden;
+  box-shadow:var(--shadow-sm)}
+.cuisine-card::before{content:'';position:absolute;top:0;left:0;right:0;
+  height:3px;background:var(--cc-color,var(--red));border-radius:0}
+.cuisine-card::after{content:'';position:absolute;top:0;left:0;bottom:0;
+  width:3px;background:var(--cc-color,var(--red));opacity:.3}
+.cuisine-card:active{transform:scale(0.97);box-shadow:none}
+.cc-top{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.cc-icon{font-size:24px;flex-shrink:0;line-height:1}
+.cc-names{flex:1;min-width:0}
+.cc-name-en{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;
+  color:var(--ink);line-height:1.2;margin-bottom:2px}
+.cc-name-zh{font-size:14px;color:var(--ink);font-weight:600;line-height:1.2}
+.cc-pinyin{font-size:10px;color:var(--ink-muted);font-style:italic;margin-top:1px}
+.cc-count{display:inline-flex;align-items:center;background:rgba(0,0,0,0.055);
+  border-radius:8px;padding:3px 8px;font-size:11px;font-weight:600;color:var(--ink-soft)}
+.cc-family-header{padding:16px 16px 6px;font-size:10px;font-weight:700;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--ink-muted)}
+
+/* ── DISH CHINESE / PINYIN ON CARDS ── */
+.dish-name-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px}
+.dish-card-zh{font-size:13px;color:var(--gold);font-weight:500;flex-shrink:0}
+.dish-card-pinyin{font-size:11px;color:var(--ink-muted);font-style:italic;
+  margin-top:1px;line-height:1.3}
+.dish-hero-zh{font-size:16px;color:rgba(253,248,242,0.75);font-style:italic;
+  margin-bottom:8px;letter-spacing:0.3px}
+
 /* ── PRESS ENTRIES ── */
 .press-entry{background:var(--cream);border:1px solid var(--border);border-radius:var(--radius-sm);
   padding:13px 14px;margin-bottom:8px;text-decoration:none;display:block;color:inherit}
@@ -534,6 +565,7 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
     </div>
     <div class="browse-toggle" style="margin:10px 16px 0">
       <button class="toggle-btn active" id="tb-region" onclick="setMode('region')">By Region</button>
+      <button class="toggle-btn" id="tb-cuisine" onclick="setMode('cuisine')">Cuisines</button>
       <button class="toggle-btn" id="tb-dish" onclick="setMode('dish')">By Dish</button>
     </div>
     <div id="home-filter-row" class="filter-row" style="padding-top:10px"></div>
@@ -544,7 +576,7 @@ html,body{height:100%;width:100%;overflow:hidden;font-family:'DM Sans',sans-seri
     <!-- Hero scrolls with content -->
     <div class="hero" id="home-hero">
       <div class="hero-eyebrow">San Gabriel Valley · The 626</div>
-      <div class="hero-title"><em id="hero-rest-count">270+</em> restaurants<br>12 regional cuisines</div>
+      <div class="hero-title"><em id="hero-rest-count">270+</em> restaurants<br>20 regional cuisines</div>
       <div class="hero-sub">From Qing Dynasty imperial courts to Uyghur Silk Road kitchens — the most diverse Chinese food scene in America.</div>
     </div>
     <!-- Content rendered here -->
@@ -787,6 +819,36 @@ REGIONS.forEach(function(r){RMap[r.key]=r;});
 // DATA — RESTAURANTS
 // ═══════════════════════════════════════════════════
 var RESTS = [];
+
+// ─── 20-Region Taxonomy (compact, matches scripts/taxonomy.json) ──────────────
+var TAXONOMY = [
+  {id:'cantonese',      name:'Cantonese',          zh:'粤菜',    py:'Yuè Cài',   family:'Southern China',  icon:'🦐', color:'#C25A38'},
+  {id:'dim_sum',        name:'Dim Sum',             zh:'饮茶',    py:'Yǐn Chá',   family:'Southern China',  icon:'🥟', color:'#B54E3A'},
+  {id:'teochew',        name:'Teochew',             zh:'潮州菜',  py:'Cháozhōu',  family:'Southern China',  icon:'🦆', color:'#A8442E'},
+  {id:'hakka',          name:'Hakka',               zh:'客家菜',  py:'Kèjiā Cài', family:'Southern China',  icon:'🧆', color:'#9E4030'},
+  {id:'hong_kong',      name:'Hong Kong Style',     zh:'港式',    py:'Gǎng Shì',  family:'Southern China',  icon:'🧋', color:'#C06040'},
+  {id:'shanghainese',   name:'Shanghainese',        zh:'沪菜',    py:'Hù Cài',    family:'Eastern China',   icon:'🥟', color:'#5872A8'},
+  {id:'jiangzhe',       name:'Jiangsu & Zhejiang',  zh:'苏浙菜',  py:'Sū Zhè Cài',family:'Eastern China',   icon:'🐟', color:'#4A6898'},
+  {id:'sichuan',        name:'Sichuan',             zh:'川菜',    py:'Chuān Cài', family:'Southwest China', icon:'🌶️', color:'#C0392B'},
+  {id:'chongqing',      name:'Chongqing',           zh:'重庆菜',  py:'Chóngqìng', family:'Southwest China', icon:'🔥', color:'#B03020'},
+  {id:'hunan',          name:'Hunan',               zh:'湘菜',    py:'Xiāng Cài', family:'Southwest China', icon:'🌶️', color:'#A84020'},
+  {id:'yunnan',         name:'Yunnan',              zh:'云南菜',  py:'Yún Nán',   family:'Southwest China', icon:'🍄', color:'#5A8A50'},
+  {id:'guizhou_guangxi',name:'Guizhou & Guangxi',   zh:'黔桂菜',  py:'Qián Guì',  family:'Southwest China', icon:'🐌', color:'#6A7A50'},
+  {id:'beijing',        name:'Beijing & Northern',  zh:'北京菜',  py:'Běijīng',   family:'Northern China',  icon:'🦆', color:'#C08030'},
+  {id:'dongbei',        name:'Dongbei',             zh:'东北菜',  py:'Dōngběi',   family:'Northern China',  icon:'🥬', color:'#B87020'},
+  {id:'xinjiang',       name:'Xinjiang',            zh:'新疆菜',  py:'Xīnjiāng',  family:'Northern China',  icon:'🍖', color:'#A86820'},
+  {id:'shaanxi_lanzhou',name:'Shaanxi & Lanzhou',   zh:'陕甘面食',py:'Shǎn Gān',  family:'Northwest China', icon:'🍜', color:'#987828'},
+  {id:'taiwanese',      name:'Taiwanese',           zh:'台湾菜',  py:'Táiwān Cài',family:'Taiwan',          icon:'🧆', color:'#4888A0'},
+  {id:'hot_pot',        name:'Hot Pot',             zh:'火锅',    py:'Huǒ Guō',   family:'Cross-Regional',  icon:'🫕', color:'#A03838'},
+  {id:'cantonese_bbq',  name:'Cantonese BBQ',       zh:'烧腊',    py:'Shāo Là',   family:'Southern China',  icon:'🍗', color:'#B05030'},
+  {id:'modern_fusion',  name:'Modern & Fusion',     zh:'新派中餐',py:'Xīn Pài',   family:'Cross-Regional',  icon:'✨', color:'#607080'},
+];
+var TAXMAP = {};
+TAXONOMY.forEach(function(t){ TAXMAP[t.id] = t; });
+
+// Populated after restaurants load: dishName → {chinese, pinyin}
+var dishChineseMap = {};
+
 var PRESS = {};  // rest_id -> [{publication, headline, url, excerpt, dishMentioned, date}]
 var DISHES = [
   {id:'D001',name:'Orange Chicken',fmt:'Poultry',icon:'🍗',count:11,rests:['La Mein Natural Noodles','Yummi Chinese Fast Food','Mandarin taste restaurant']},
@@ -1482,6 +1544,7 @@ var FORMATS = [
 function setMode(m){
   browseMode = m;
   document.getElementById('tb-region').classList.toggle('active', m==='region');
+  document.getElementById('tb-cuisine').classList.toggle('active', m==='cuisine');
   document.getElementById('tb-dish').classList.toggle('active', m==='dish');
   fmtFilter = 'All';
   filterOpenNow = false;
@@ -1511,6 +1574,7 @@ function renderHome(){
   var scroll = document.getElementById('home-scroll');
   scroll.innerHTML = '';
   if(browseMode === 'region') renderRegionMode(scroll, q);
+  else if(browseMode === 'cuisine') renderCuisineMode(scroll, q);
   else renderDishMode(scroll, q);
   // Show search result count
   var cntEl = document.getElementById('search-count');
@@ -1634,6 +1698,139 @@ function renderRegionMode(el, q){
   var sp = document.createElement('div'); sp.className='spacer-bot'; el.appendChild(sp);
 }
 
+// ═══════════════════════════════════════════════════
+// CUISINE MODE — browse by 20-region taxonomy
+// ═══════════════════════════════════════════════════
+function renderCuisineMode(el, q){
+  var frow = document.getElementById('home-filter-row');
+  frow.innerHTML = '';
+
+  if(q){
+    // Reuse region search logic for cuisine mode
+    var rMatches = RESTS.filter(function(r){
+      var tax = TAXMAP[r.cuisinePrimary];
+      return r.name.toLowerCase().indexOf(q)>=0 ||
+             r.city.toLowerCase().indexOf(q)>=0 ||
+             (tax && tax.name.toLowerCase().indexOf(q)>=0) ||
+             r.dishes.some(function(d){ return d.toLowerCase().indexOf(q)>=0; });
+    });
+    var dMatches = DISHES.filter(function(d){
+      return d.name.toLowerCase().indexOf(q)>=0 || (d.fmt||'').toLowerCase().indexOf(q)>=0;
+    });
+    if(dMatches.length){
+      var dh = document.createElement('div'); dh.className='sec-hdr';
+      dh.innerHTML = '<h2>Dishes</h2><span class="cnt">'+dMatches.length+' found</span>';
+      el.appendChild(dh);
+      var dg = document.createElement('div');
+      dg.style.cssText = 'display:flex;flex-direction:column;gap:9px;padding:0 16px 8px';
+      dMatches.forEach(function(d,i){ var c=makeDishCard(d); c.style.animationDelay=(i*.03)+'s'; dg.appendChild(c); });
+      el.appendChild(dg);
+    }
+    if(rMatches.length){
+      var rh = document.createElement('div'); rh.className='sec-hdr';
+      rh.innerHTML = '<h2>Restaurants</h2><span class="cnt">'+rMatches.length+' found</span>';
+      el.appendChild(rh);
+      var rl = document.createElement('div'); rl.className='rest-list'; rl.style.paddingTop='0';
+      rMatches.forEach(function(r,i){ var c=makeRestCard(r); c.style.animationDelay=(i*.04)+'s'; rl.appendChild(c); });
+      el.appendChild(rl);
+    }
+    if(!dMatches.length && !rMatches.length) el.appendChild(makeEmpty('🔍','No results','Try a different search term'));
+    return;
+  }
+
+  // Count restaurants per taxonomy id (primary + secondary)
+  var counts = {};
+  RESTS.forEach(function(r){
+    if(r.cuisinePrimary)   counts[r.cuisinePrimary]   = (counts[r.cuisinePrimary]   || 0) + 1;
+    if(r.cuisineSecondary) counts[r.cuisineSecondary] = (counts[r.cuisineSecondary] || 0) + 0.5; // secondary counts half
+  });
+
+  // Group by geographic family
+  var families = [];
+  var familySeen = {};
+  TAXONOMY.forEach(function(t){ if(!familySeen[t.family]){ familySeen[t.family]=true; families.push(t.family); } });
+
+  families.forEach(function(family){
+    var cuisines = TAXONOMY.filter(function(t){ return t.family===family && counts[t.id] && Math.floor(counts[t.id])>0; });
+    if(!cuisines.length) return;
+
+    var fhdr = document.createElement('div'); fhdr.className='sec-hdr';
+    var fh2 = document.createElement('h2'); fh2.textContent = family;
+    var fcnt = document.createElement('span'); fcnt.className='cnt';
+    fcnt.textContent = cuisines.length+' style'+(cuisines.length!==1?'s':'');
+    fhdr.appendChild(fh2); fhdr.appendChild(fcnt);
+    el.appendChild(fhdr);
+
+    var grid = document.createElement('div'); grid.className='cuisine-grid';
+    cuisines.forEach(function(tax, i){
+      var cnt = Math.floor(counts[tax.id] || 0);
+      var card = document.createElement('div');
+      card.className = 'cuisine-card anim';
+      card.style.cssText = '--cc-color:'+tax.color+';animation-delay:'+(i*.05)+'s';
+
+      var top = document.createElement('div'); top.className='cc-top';
+      var ico = document.createElement('span'); ico.className='cc-icon'; ico.textContent=tax.icon;
+      var names = document.createElement('div'); names.className='cc-names';
+      var en = document.createElement('div'); en.className='cc-name-en'; en.textContent=tax.name;
+      var zh = document.createElement('div'); zh.className='cc-name-zh'; zh.textContent=tax.zh;
+      var py = document.createElement('div'); py.className='cc-pinyin'; py.textContent=tax.py;
+      names.appendChild(en); names.appendChild(zh); names.appendChild(py);
+      top.appendChild(ico); top.appendChild(names);
+
+      var bot = document.createElement('div'); bot.className='cc-count';
+      bot.textContent = cnt+' restaurant'+(cnt!==1?'s':'');
+
+      card.appendChild(top); card.appendChild(bot);
+      card.onclick = function(){ openCuisineDetail(tax); };
+      grid.appendChild(card);
+    });
+    el.appendChild(grid);
+  });
+
+  var sp = document.createElement('div'); sp.className='spacer-bot'; el.appendChild(sp);
+}
+
+function openCuisineDetail(tax){
+  // Reuse the region screen but filtered by taxonomy id
+  curRegion = '__cuisine__' + tax.id;
+  document.getElementById('region-hdr').textContent = tax.icon + ' ' + tax.name;
+  var rests = RESTS.filter(function(r){
+    return r.cuisinePrimary === tax.id || r.cuisineSecondary === tax.id;
+  });
+  // Sort: primary cuisine first, then secondary
+  rests.sort(function(a,b){
+    var ap = a.cuisinePrimary===tax.id ? 0 : 1;
+    var bp = b.cuisinePrimary===tax.id ? 0 : 1;
+    return ap - bp || (a.google_rating||0) > (b.google_rating||0) ? -1 : 1;
+  });
+  renderDishChips(rests);
+
+  // Show cuisine info banner at top of list
+  var list = document.getElementById('region-rest-list');
+  list.innerHTML = '';
+
+  // Cuisine description card
+  var infoCard = document.createElement('div');
+  infoCard.style.cssText = 'background:var(--cream);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:0 16px 12px;';
+  var infoTitle = document.createElement('div');
+  infoTitle.style.cssText = 'font-family:\'Playfair Display\',serif;font-size:18px;font-weight:700;color:var(--ink);margin-bottom:2px';
+  infoTitle.textContent = tax.zh + ' · ' + tax.py;
+  var infoFamily = document.createElement('div');
+  infoFamily.style.cssText = 'font-size:11px;color:var(--gold);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px';
+  infoFamily.textContent = tax.family;
+  infoCard.appendChild(infoTitle); infoCard.appendChild(infoFamily);
+  list.appendChild(infoCard);
+
+  document.getElementById('region-cnt').textContent = rests.length + ' restaurant'+(rests.length!==1?'s':'');
+  var filteredByDish = curDishFilter ? rests.filter(function(r){ return r.dishes.indexOf(curDishFilter)>=0; }) : rests;
+  if(!filteredByDish.length){
+    list.appendChild(makeEmpty('🍽','No restaurants yet','This cuisine is not yet classified in the SGV database'));
+  } else {
+    filteredByDish.forEach(function(r,i){ var c=makeRestCard(r); c.style.animationDelay=(i*.04)+'s'; list.appendChild(c); });
+  }
+  showScreen('s-region', true);
+}
+
 function renderDishMode(el, q){
   // Category dropdown
   var frow = document.getElementById('home-filter-row');
@@ -1747,9 +1944,22 @@ function openDishDetail(d){
   var regionName = (d.regionTags && d.regionTags[0]) || d.region || '';
   var reg = RMap[regionName];
   var color = reg ? reg.color : '#C85450';
+  // Merge Chinese/pinyin from dishChineseMap if not on the dish object
+  var chInfo = (d.chinese && d.pinyin) ? d : (dishChineseMap[d.name] || {});
   document.getElementById('dish-hdr').textContent = d.name;
   document.getElementById('dish-icon').textContent = d.icon||'🍽';
   document.getElementById('dish-name-h').textContent = d.name;
+  // Chinese + pinyin under the name
+  var dishNameH = document.getElementById('dish-name-h');
+  var existingZh = dishNameH.nextSibling;
+  while(existingZh && existingZh.nodeType===1 && existingZh.className && existingZh.className.indexOf('dish-hero-zh')>=0){
+    var nx = existingZh.nextSibling; dishNameH.parentNode.removeChild(existingZh); existingZh=nx;
+  }
+  if(chInfo.chinese){
+    var zhHero = document.createElement('div'); zhHero.className='dish-hero-zh';
+    zhHero.textContent = chInfo.chinese + (chInfo.pinyin ? ' · ' + chInfo.pinyin : '');
+    dishNameH.insertAdjacentElement('afterend', zhHero);
+  }
   // Show category + region tags in subline
   var originParts = [];
   if(d.fmt) originParts.push(d.fmt);
@@ -1858,19 +2068,25 @@ function openRestDetail(r){
   var dr = document.getElementById('rest-dishes');
   dr.innerHTML = '';
 
-  // Priority: reviewDishes (real review data) > dishDetails > plain dish names
+  // Priority: topDishes (structured with Chinese/pinyin) > reviewDishes > dishDetails > plain dish names
   var dishSource = [];
-  if(r.reviewDishes && r.reviewDishes.length) {
+  if(r.topDishes && r.topDishes.length) {
+    // Sort: signature dishes first
+    var sortedTop = r.topDishes.slice().sort(function(a,b){ return (b.isSignature?1:0)-(a.isSignature?1:0); });
+    dishSource = sortedTop.map(function(d) {
+      return { name: d.name, chinese: d.chinese||'', pinyin: d.pinyin||'', category: d.category||'', summary: '', isBest: d.isSignature||false };
+    });
+  } else if(r.reviewDishes && r.reviewDishes.length) {
     dishSource = r.reviewDishes.map(function(d) {
-      return { name: d.name, category: d.category, summary: d.summary, isBest: false };
+      return { name: d.name, chinese: '', pinyin: '', category: d.category, summary: d.summary, isBest: false };
     });
   } else if(r.dishDetails && r.dishDetails.length) {
     dishSource = r.dishDetails.map(function(d) {
-      return { name: d.name || d.dishId, category: d.formatGroup || '', summary: d.reviewSummary || d.note || '', isBest: d.isBest || false };
+      return { name: d.name || d.dishId, chinese: '', pinyin: '', category: d.formatGroup || '', summary: d.reviewSummary || d.note || '', isBest: d.isBest || false };
     });
   } else if(r.dishes && r.dishes.length) {
     dishSource = r.dishes.map(function(d) {
-      return { name: d, category: '', summary: '', isBest: r.best && r.best.indexOf(d) >= 0 };
+      return { name: d, chinese: '', pinyin: '', category: '', summary: '', isBest: r.best && r.best.indexOf(d) >= 0 };
     });
   }
 
@@ -2151,22 +2367,39 @@ function renderMapList(rests){
 // ═══════════════════════════════════════════════════
 function makeDishCard(d){
   var cnt = d.count || (d.rests ? d.rests.length : 0);
+  // Enrich with Chinese/pinyin from dishChineseMap if not on the dish object itself
+  var chineseInfo = (d.chinese && d.pinyin) ? d : (dishChineseMap[d.name] || {});
   var card = document.createElement('div');
   card.className = 'dish-card anim';
   var ico = document.createElement('div'); ico.className='dish-card-icon'; ico.textContent=d.icon||'🍽';
   var body = document.createElement('div'); body.className='dish-card-body';
+
+  // Name row with Chinese characters
+  var nameRow = document.createElement('div'); nameRow.className='dish-name-row';
   var nm = document.createElement('div'); nm.className='dish-card-name'; nm.textContent=d.name;
+  nameRow.appendChild(nm);
+  if(chineseInfo.chinese){
+    var zhEl = document.createElement('span'); zhEl.className='dish-card-zh'; zhEl.textContent=chineseInfo.chinese;
+    nameRow.appendChild(zhEl);
+  }
+  body.appendChild(nameRow);
+
+  // Pinyin
+  if(chineseInfo.pinyin){
+    var pyEl = document.createElement('div'); pyEl.className='dish-card-pinyin'; pyEl.textContent=chineseInfo.pinyin;
+    body.appendChild(pyEl);
+  }
+
   var meta = document.createElement('div'); meta.className='dish-card-meta';
   meta.textContent = d.fmt || d.region || '';
-  // Region tags from enrich_dish_descriptions.py
   if(d.regionTags && d.regionTags.length){
-    var rtagEl = document.createElement('div');
-    rtagEl.style.cssText='font-size:10px;color:var(--gold);font-weight:600;margin-top:2px;letter-spacing:.3px';
-    rtagEl.textContent = d.regionTags.join(' · ');
-    meta.appendChild(document.createTextNode(' · '));
+    var rtagEl = document.createElement('span');
+    rtagEl.style.cssText='color:var(--gold);font-weight:600;margin-left:4px';
+    rtagEl.textContent = ' · '+d.regionTags.join(' · ');
     meta.appendChild(rtagEl);
   }
-  body.appendChild(nm); body.appendChild(meta);
+  body.appendChild(meta);
+
   var descText = d.description || d.desc;
   if(descText){
     var dsc = document.createElement('div');
@@ -2408,7 +2641,10 @@ renderSkeleton();
       google_rating: r.googleRating || r.google_rating || null,
       google_count:  r.googleReviewCount || r.google_review_count || null,
       sources:      r.sources || [],
-      reviewDishes: r.reviewDishes || []  // from Google reviews + Claude
+      reviewDishes: r.reviewDishes || [],
+      topDishes:    r.topDishes || [],        // structured dishes with Chinese/pinyin
+      cuisinePrimary:   r.cuisinePrimary   || '',
+      cuisineSecondary: r.cuisineSecondary || ''
     };
   }
 
@@ -2431,6 +2667,15 @@ renderSkeleton();
       console.log('[626 Eats] After mapping and filter:', RESTS.length, 'restaurants');
 
       RESTS.forEach(function(r){ RstMap[r.id] = r; });
+
+      // Build dish→Chinese/pinyin lookup from topDishes data
+      RESTS.forEach(function(r){
+        (r.topDishes || []).forEach(function(d){
+          if(d.name && d.chinese && !dishChineseMap[d.name]){
+            dishChineseMap[d.name] = {chinese: d.chinese, pinyin: d.pinyin || ''};
+          }
+        });
+      });
 
       // Update hero count dynamically
       var heroCount = document.getElementById('hero-rest-count');
