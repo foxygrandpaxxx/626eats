@@ -1,0 +1,44 @@
+name: Reclassify Restaurants
+
+# Assigns every restaurant a primary (and optional secondary) cuisine
+# from the new 20-region taxonomy using Claude Sonnet.
+# Uses dishes, AI summaries, and reviews as evidence.
+# Cost: ~$0.50 total with Sonnet batching.
+#
+# Required secrets:
+#   ANTHROPIC_API_KEY
+#   GOOGLE_SERVICE_ACCOUNT_JSON
+#   SPREADSHEET_ID
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_reclassify:
+        description: 'Re-classify restaurants that are already classified (true/false)'
+        required: false
+        default: 'false'
+
+jobs:
+  reclassify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install gspread google-auth
+
+      - name: Reclassify restaurants
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          FORCE_RECLASSIFY: ${{ github.event.inputs.force_reclassify }}
+        run: python scripts/reclassify_restaurants.py
