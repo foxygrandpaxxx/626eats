@@ -355,7 +355,7 @@ def _flush_updates(ws, updates):
     if not updates:
         return
     batch = [
-        {"range": f"'{ws.title}'!{col_letter(col)}{row}", "values": [[val]]}
+        {"range": f"{col_letter(col)}{row}", "values": [[val]]}
         for row, col, val in updates
     ]
     print(f"  → Writing {len(updates)} cells...", end=" ", flush=True)
