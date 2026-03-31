@@ -1,0 +1,49 @@
+name: Refresh Places Data
+
+# Fetches rich data from Google Places API (New) v1 for all restaurants:
+#   • Gemini AI overview (generativeSummary) — often names popular dishes
+#   • AI review synthesis (reviewSummary)
+#   • Editorial summary
+#   • Up to 5 full user reviews
+#   • Google rating + review count
+#
+# Cost: ~$6.83 in Google Maps credits — covered by $200/mo free credit.
+# Re-run quarterly or after adding new restaurants.
+#
+# Required secrets:
+#   GOOGLE_SERVICE_ACCOUNT_JSON
+#   SPREADSHEET_ID
+#   GOOGLE_API_KEY   (Places API enabled)
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_refresh:
+        description: 'Re-fetch restaurants that already have data (true/false)'
+        required: false
+        default: 'false'
+
+jobs:
+  refresh-places:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install gspread google-auth
+
+      - name: Refresh Places data
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          SPREADSHEET_ID: ${{ secrets.SPREADSHEET_ID }}
+          GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          FORCE_REFRESH: ${{ github.event.inputs.force_refresh }}
+        run: python scripts/refresh_places_data.py

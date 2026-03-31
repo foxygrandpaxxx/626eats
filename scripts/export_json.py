@@ -63,10 +63,20 @@ REST_COLS = {
     "date_added":    39,  # AM
     "date_verified": 40,  # AN
     "added_by":      41,  # AO
-    # Ratings (written by refresh_ratings.py) — add these headers to row 3 of your sheet
+    # Ratings (written by refresh_places_data.py)
     "google_rating":       54,  # BB
     "google_review_count": 55,  # BC
-    # Dish columns (enriched from Google reviews + Claude)
+    # Places API (New) rich data (written by refresh_places_data.py)
+    "generative_summary":  56,  # BD
+    "review_summary":      57,  # BE
+    "editorial_summary":   58,  # BF
+    "reviews_json":        59,  # BG
+    # Enriched dishes (written by dish_harvest.py)
+    "top_dishes_json":     60,  # BH
+    # Taxonomy classification (written by reclassify_restaurants.py)
+    "cuisine_primary":     61,  # BI
+    "cuisine_secondary":   62,  # BJ
+    # Legacy dish columns (enriched from Google reviews + Claude)
     "dish1_name":    42,  # AP
     "dish1_cat":     43,  # AQ
     "dish1_summary": 44,  # AR
@@ -129,6 +139,23 @@ def get_sheets_client():
     ]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.Client(auth=creds)
+
+def _parse_top_dishes(json_str):
+    """Safely parse top_dishes_json column. Returns list or empty list."""
+    if not json_str:
+        return []
+    try:
+        dishes = json.loads(json_str)
+        if not isinstance(dishes, list):
+            return []
+        # Return only essential fields for the JSON (keep payload small)
+        return [
+            {k: d[k] for k in ("name", "chinese", "pinyin", "isSignature", "category") if k in d}
+            for d in dishes if d.get("name")
+        ]
+    except (json.JSONDecodeError, TypeError):
+        return []
+
 
 def export():
     print(f"Exporting from Google Sheets: {SPREADSHEET_ID}")
@@ -253,6 +280,12 @@ def export():
             "dianpingId":    get_cell(row, REST_COLS["dianping_id"]) or None,
             "googleRating":      parse_float(get_cell(row, REST_COLS["google_rating"])),
             "googleReviewCount": int(get_cell(row, REST_COLS["google_review_count"]) or 0) or None,
+            "generativeSummary": get_cell(row, REST_COLS["generative_summary"]) or None,
+            "reviewSummary":     get_cell(row, REST_COLS["review_summary"]) or None,
+            "editorialSummary":  get_cell(row, REST_COLS["editorial_summary"]) or None,
+            "topDishes":         _parse_top_dishes(get_cell(row, REST_COLS["top_dishes_json"])),
+            "cuisinePrimary":    get_cell(row, REST_COLS["cuisine_primary"]) or None,
+            "cuisineSecondary":  get_cell(row, REST_COLS["cuisine_secondary"]) or None,
             "notes":   get_cell(row, REST_COLS["notes"]) or None,
             "sources": parse_list(get_cell(row, REST_COLS["sources"])),
             "dateAdded":    get_cell(row, REST_COLS["date_added"]) or None,
